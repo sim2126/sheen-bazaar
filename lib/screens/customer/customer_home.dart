@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../services/category_service.dart';
 import '../../models/category_model.dart';
+import '../../utils/transitions.dart';
 import 'shops_list.dart';
 import 'cart_icon_button.dart';
 import 'ai_assistant.dart';
@@ -72,50 +73,8 @@ class _CustomerHomeState extends State<CustomerHome> {
               mainAxisSpacing: 12,
             ),
             itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ShopsList(
-                        categoryId: category.id,
-                        categoryName: category.name,
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    image: DecorationImage(
-                      image: NetworkImage(category.image),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      category.name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
+            itemBuilder: (context, index) =>
+                _CategoryCard(category: categories[index]),
           );
         },
       ),
@@ -146,7 +105,7 @@ class _CustomerHomeState extends State<CustomerHome> {
               ),
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AiAssistant()),
+                fadeSlideRoute(const AiAssistant()),
               ),
             ),
     );
@@ -160,12 +119,10 @@ class _CustomerHomeState extends State<CustomerHome> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         onSelected: (value) => Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => LoginPage(
-              returnAfterLogin: true,
-              initialMode: value == 'login' ? LoginMode.login : LoginMode.register,
-            ),
-          ),
+          fadeSlideRoute(LoginPage(
+            returnAfterLogin: true,
+            initialMode: value == 'login' ? LoginMode.login : LoginMode.register,
+          )),
         ),
         itemBuilder: (_) => [
           PopupMenuItem(
@@ -213,5 +170,93 @@ class _CustomerHomeState extends State<CustomerHome> {
         onPressed: () => FirebaseAuth.instance.signOut(),
       ),
     ];
+  }
+}
+
+// ── Category Card with press-scale animation ──
+class _CategoryCard extends StatefulWidget {
+  final CategoryModel category;
+  const _CategoryCard({required this.category});
+
+  @override
+  State<_CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<_CategoryCard> {
+  double _scale = 1.0;
+
+  void _onTapDown(TapDownDetails _) => setState(() => _scale = 0.94);
+  void _onTapUp(TapUpDetails _) => setState(() => _scale = 1.0);
+  void _onTapCancel() => setState(() => _scale = 1.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      onTap: () => Navigator.push(
+        context,
+        fadeSlideRoute(ShopsList(
+          categoryId: widget.category.id,
+          categoryName: widget.category.name,
+        )),
+      ),
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOut,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                widget.category.image,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Container(color: const Color(0xFFEDE0CC)),
+              ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: [0.35, 1.0],
+                    colors: [
+                      Colors.transparent,
+                      Color(0xCC1E1208),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    widget.category.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

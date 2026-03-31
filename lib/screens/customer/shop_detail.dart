@@ -1,9 +1,12 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import '../../models/shop_model.dart';
 import '../../models/product_model.dart';
 import '../../services/shop_service.dart';
+import '../../utils/transitions.dart';
 import 'product_detail.dart';
 import 'cart_icon_button.dart';
 
@@ -74,7 +77,7 @@ class _ShopDetailState extends State<ShopDetail> {
                           shop.coverImage,
                           fit: BoxFit.cover,
                           errorBuilder:
-                              (_, __, ___) =>
+                              (context, error, stackTrace) =>
                                   _heroBg(),
                         )
                       : _heroBg(),
@@ -93,6 +96,21 @@ class _ShopDetailState extends State<ShopDetail> {
                       ),
                     ),
                   ),
+                  // Glassmorphic strip at the top (AppBar area)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          height: kToolbarHeight,
+                          color: const Color(0xFF1E1208).withValues(alpha: 0.15),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -104,13 +122,16 @@ class _ShopDetailState extends State<ShopDetail> {
                   CrossAxisAlignment.start,
               children: [
                 // ── Artisan Strip ──
-                Container(
-                  color: const Color(0xFF3D2B1F),
-                  padding:
-                      const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF3D2B1F),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                   child: Row(
                     children: [
                       // Logo
@@ -236,6 +257,7 @@ class _ShopDetailState extends State<ShopDetail> {
                       ),
                     ],
                   ),
+                ),
                 ),
 
                 // ── Open/Closed Banner ──
@@ -376,16 +398,12 @@ class _ShopDetailState extends State<ShopDetail> {
             builder: (context, snapshot) {
               if (snapshot.connectionState ==
                   ConnectionState.waiting) {
-                return const SliverToBoxAdapter(
+                return SliverToBoxAdapter(
                   child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child:
-                          CircularProgressIndicator(
-                            color: Color(
-                              0xFFC8821A,
-                            ),
-                          ),
+                    child: Lottie.asset(
+                      'assets/lottie/Falling leaves.json',
+                      height: 180,
+                      repeat: true,
                     ),
                   ),
                 );
@@ -478,12 +496,10 @@ class _ProductCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetail(
-              product: product,
-              shop: shop,
-            ),
-          ),
+          fadeSlideRoute(ProductDetail(
+            product: product,
+            shop: shop,
+          )),
         );
       },
       child: Container(
@@ -517,7 +533,7 @@ class _ProductCard extends StatelessWidget {
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder:
-                            (_, __, ___) =>
+                            (context, error, stackTrace) =>
                                 _imgFallback(),
                       )
                     : _imgFallback(),

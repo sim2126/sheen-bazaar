@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/shop_model.dart';
 import '../../services/shop_service.dart';
+import '../../utils/transitions.dart';
 import 'shop_detail.dart';
 
 class ShopsList extends StatefulWidget {
@@ -108,10 +109,7 @@ class _ShopCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) =>
-                ShopDetail(shop: shop),
-          ),
+          fadeSlideRoute(ShopDetail(shop: shop)),
         );
       },
       child: Container(
