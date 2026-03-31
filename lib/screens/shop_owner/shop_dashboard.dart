@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../models/shop_model.dart';
 import 'create_shop.dart';
 import 'manage_products.dart';
@@ -108,9 +109,9 @@ class _ShopDashboardState
           mainAxisAlignment:
               MainAxisAlignment.center,
           children: [
-            const Text(
-              '🏪',
-              style: TextStyle(fontSize: 72),
+            Image.asset(
+              'assets/images/pinjra_window.png',
+              height: 120,
             ),
             const SizedBox(height: 20),
             const Text(
@@ -123,7 +124,7 @@ class _ShopDashboardState
             ),
             const SizedBox(height: 8),
             Text(
-              'Create your shop and start showcasing your crafts to the world.',
+              'The artisan is resting.\nCreate your shop to open your windows to the bazaar.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -216,13 +217,10 @@ class _ShopDashboardState
                                 )
                               : null,
                           child: shop.logo.isEmpty
-                              ? const Text(
-                                  '🧑‍🎨',
-                                  style:
-                                      TextStyle(
-                                        fontSize:
-                                            22,
-                                      ),
+                              ? const Icon(
+                                  LucideIcons.user,
+                                  color: Color(0xFFF5EDE0),
+                                  size: 26,
                                 )
                               : null,
                         ),
@@ -349,7 +347,7 @@ class _ShopDashboardState
               children: [
                 Expanded(
                   child: _StatCard(
-                    icon: '⭐',
+                    icon: Image.asset('assets/images/chinar_leaf.png', height: 24, width: 24),
                     label: 'Rating',
                     value: shop.rating
                         .toStringAsFixed(1),
@@ -358,7 +356,7 @@ class _ShopDashboardState
                 const SizedBox(width: 12),
                 Expanded(
                   child: _StatCard(
-                    icon: '💬',
+                    icon: const Icon(LucideIcons.messageSquare, size: 24, color: Color(0xFF3D2B1F)),
                     label: 'Reviews',
                     value: '${shop.totalReviews}',
                   ),
@@ -366,7 +364,7 @@ class _ShopDashboardState
                 const SizedBox(width: 12),
                 Expanded(
                   child: _StatCard(
-                    icon: '📦',
+                    icon: const Icon(LucideIcons.packageOpen, size: 24, color: Color(0xFF3D2B1F)),
                     label: 'Status',
                     value: shop.isOpen
                         ? 'Open'
@@ -465,7 +463,7 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  final String icon;
+  final Widget icon;
   final String label;
   final String value;
   final Color? valueColor;
@@ -491,7 +489,7 @@ class _StatCard extends StatelessWidget {
           BoxShadow(
             color: const Color(
               0xFF3D2B1F,
-            ).withOpacity(0.06),
+            ).withValues(alpha:0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -499,10 +497,7 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            icon,
-            style: const TextStyle(fontSize: 22),
-          ),
+          icon,
           const SizedBox(height: 6),
           Text(
             value,
@@ -555,7 +550,7 @@ class _ActionTile extends StatelessWidget {
             BoxShadow(
               color: const Color(
                 0xFF3D2B1F,
-              ).withOpacity(0.06),
+              ).withValues(alpha:0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

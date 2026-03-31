@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AdminShops extends StatelessWidget {
   const AdminShops({super.key});
@@ -80,7 +81,7 @@ class AdminShops extends StatelessWidget {
                     BoxShadow(
                       color: const Color(
                         0xFF3D2B1F,
-                      ).withOpacity(0.06),
+                      ).withValues(alpha:0.06),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -118,7 +119,7 @@ class AdminShops extends StatelessWidget {
                                 data['logo']
                                     .toString()
                                     .isEmpty
-                            ? const Text('🏪')
+                            ? const Icon(LucideIcons.store, color: Color(0xFF3D2B1F), size: 22)
                             : null,
                       ),
                       title: Text(
@@ -407,10 +408,11 @@ class _ShopProductsList extends StatelessWidget {
       width: 38,
       height: 38,
       color: const Color(0xFFEDE0CC),
-      child: const Center(
-        child: Text(
-          '🧺',
-          style: TextStyle(fontSize: 16),
+      child: Center(
+        child: Image.asset(
+          'assets/images/wicker_basket.png',
+          height: 24,
+          color: const Color(0x553D2B1F),
         ),
       ),
     );

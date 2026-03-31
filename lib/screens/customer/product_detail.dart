@@ -338,10 +338,11 @@ class ProductDetail extends StatelessWidget {
   Widget _imgFallback() {
     return Container(
       color: const Color(0xFFEDE0CC),
-      child: const Center(
-        child: Text(
-          '🧺',
-          style: TextStyle(fontSize: 64),
+      child: Center(
+        child: Image.asset(
+          'assets/images/wicker_basket.png',
+          height: 64,
+          color: const Color(0x333D2B1F),
         ),
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../splash_screen.dart';
 import '../shop_owner/shop_dashboard.dart';
 import '../admin/admin_panel.dart';
@@ -193,26 +195,24 @@ class _LoginPageState extends State<LoginPage> {
                                 20,
                               ),
                         ),
-                        child: const Center(
-                          child: Text(
-                            '🧣',
-                            style: TextStyle(
-                              fontSize: 36,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Image.asset(
+                              'assets/images/chinar_leaf.png',
+                              color: const Color(0xFFF5EDE0),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'Sheen Bazaar',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight:
-                              FontWeight.w700,
-                          color: Color(
-                            0xFF3D2B1F,
-                          ),
-                          letterSpacing: 0.5,
+                        style: GoogleFonts.cormorantGaramond(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF3D2B1F),
+                          letterSpacing: 1,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -376,14 +376,14 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         _roleChip(
                           label: 'Customer',
-                          icon: '🛍️',
+                          icon: const Icon(LucideIcons.shoppingBag, size: 24),
                           value: 'customer',
                         ),
                         const SizedBox(width: 12),
                         _roleChip(
                           label:
                               'Artisan / Shop Owner',
-                          icon: '🧑‍🎨',
+                          icon: const Icon(LucideIcons.palette, size: 24),
                           value: 'shop_owner',
                         ),
                       ],
@@ -503,7 +503,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _roleChip({
     required String label,
-    required String icon,
+    required Widget icon,
     required String value,
   }) {
     final selected = _role == value;
@@ -535,11 +535,15 @@ class _LoginPageState extends State<LoginPage> {
           ),
           child: Column(
             children: [
-              Text(
-                icon,
-                style: const TextStyle(
-                  fontSize: 22,
+              Theme(
+                data: ThemeData(
+                  iconTheme: IconThemeData(
+                    color: selected
+                        ? const Color(0xFFF5EDE0)
+                        : const Color(0xFF3D2B1F),
+                  ),
                 ),
+                child: icon,
               ),
               const SizedBox(height: 4),
               Text(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../services/category_service.dart';
 import '../../models/category_model.dart';
 import 'shops_list.dart';
@@ -49,6 +50,10 @@ class _CustomerHomeState extends State<CustomerHome> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -130,7 +135,7 @@ class _CustomerHomeState extends State<CustomerHome> {
             )
           : FloatingActionButton.extended(
               backgroundColor: const Color(0xFF3D2B1F),
-              icon: const Text('✨', style: TextStyle(fontSize: 18)),
+              icon: const Icon(LucideIcons.sparkles, color: Color(0xFFC9A55A), size: 20),
               label: const Text(
                 'AI Assistant',
                 style: TextStyle(

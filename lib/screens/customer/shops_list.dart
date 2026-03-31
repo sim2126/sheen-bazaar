@@ -59,23 +59,23 @@ class _ShopsListState extends State<ShopsList> {
           }
           if (!snapshot.hasData ||
               snapshot.data!.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment:
                     MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '🏪',
-                    style: TextStyle(
-                      fontSize: 56,
-                    ),
+                  Image.asset(
+                    'assets/images/pinjra_window.png',
+                    height: 100,
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No shops open in this category yet',
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No artisans have opened their windows\nfor this category yet.',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey,
                       fontStyle: FontStyle.italic,
+                      height: 1.5,
                     ),
                   ),
                 ],
@@ -343,10 +343,11 @@ class _ShopCard extends StatelessWidget {
       height: 160,
       width: double.infinity,
       color: const Color(0xFFEDE0CC),
-      child: const Center(
-        child: Text(
-          '🏪',
-          style: TextStyle(fontSize: 48),
+      child: Center(
+        child: Image.asset(
+          'assets/images/pinjra_window.png',
+          height: 80,
+          color: Colors.white24,
         ),
       ),
     );

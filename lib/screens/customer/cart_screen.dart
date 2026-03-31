@@ -198,9 +198,9 @@ class _CartScreenState extends State<CartScreen> {
         mainAxisAlignment:
             MainAxisAlignment.center,
         children: [
-          const Text(
-            '🛒',
-            style: TextStyle(fontSize: 64),
+          Image.asset(
+            'assets/images/wicker_basket.png',
+            height: 110,
           ),
           const SizedBox(height: 20),
           const Text(
@@ -213,11 +213,13 @@ class _CartScreenState extends State<CartScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Explore the bazaar and add something beautiful.',
+            'Like a crisp autumn breeze...\nyour cart is currently empty.',
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.grey[600],
               fontStyle: FontStyle.italic,
               fontSize: 14,
+              height: 1.5,
             ),
           ),
           const SizedBox(height: 28),
@@ -480,10 +482,12 @@ class _CartItemCard extends StatelessWidget {
       width: 70,
       height: 70,
       color: const Color(0xFFEDE0CC),
-      child: const Center(
-        child: Text(
-          '🧺',
-          style: TextStyle(fontSize: 28),
+      child: Center(
+        child: Image.asset(
+          'assets/images/wicker_basket.png',
+          height: 36,
+          width: 36,
+          color: const Color(0x333D2B1F),
         ),
       ),
     );

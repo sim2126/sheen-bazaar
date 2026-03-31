@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_router.dart';
 import 'providers/cart_provider.dart';
 
@@ -28,15 +29,27 @@ class SheenBazaarApp extends StatelessWidget {
           scaffoldBackgroundColor: const Color(
             0xFFF5EDE0,
           ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF3D2B1F),
-            foregroundColor: Color(0xFFF5EDE0),
+          textTheme: GoogleFonts.latoTextTheme().copyWith(
+            displayLarge: GoogleFonts.cormorantGaramond(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF3D2B1F),
+            ),
+            headlineMedium: GoogleFonts.cormorantGaramond(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF3D2B1F),
+            ),
+          ),
+          appBarTheme: AppBarTheme(
+            backgroundColor: const Color(0xFF3D2B1F),
+            foregroundColor: const Color(0xFFF5EDE0),
             elevation: 0,
             centerTitle: true,
-            titleTextStyle: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFFF5EDE0),
+            titleTextStyle: GoogleFonts.cormorantGaramond(
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFFF5EDE0),
               letterSpacing: 1.2,
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../models/product_model.dart';
 import '../../services/claude_service.dart';
 import '../../services/image_upload_service.dart';
@@ -75,7 +76,7 @@ class _ManageProductsState extends State<ManageProducts> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('📦', style: TextStyle(fontSize: 56)),
+                  Image.asset('assets/images/wicker_basket.png', height: 80),
                   const SizedBox(height: 16),
                   Text(
                     'No products yet.\nTap + to add your first product.',
@@ -231,7 +232,7 @@ class _ManageProductsState extends State<ManageProducts> {
       width: 56,
       height: 56,
       color: const Color(0xFFEDE0CC),
-      child: const Center(child: Text('🧺', style: TextStyle(fontSize: 24))),
+      child: Center(child: Image.asset('assets/images/wicker_basket.png', height: 28, color: const Color(0x333D2B1F))),
     );
   }
 }
@@ -621,7 +622,7 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
                     strokeWidth: 2,
                   ),
                 )
-              : const Text('✨', style: TextStyle(fontSize: 20)),
+              : const Icon(LucideIcons.sparkles, color: Color(0xFFF5EDE0), size: 20),
         ),
       ),
     );

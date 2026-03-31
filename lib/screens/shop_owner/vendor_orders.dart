@@ -55,11 +55,9 @@ class VendorOrders extends StatelessWidget {
                 mainAxisAlignment:
                     MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    '🧾',
-                    style: TextStyle(
-                      fontSize: 56,
-                    ),
+                  Image.asset(
+                    'assets/images/wicker_basket.png',
+                    height: 80,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -107,7 +105,7 @@ class VendorOrders extends StatelessWidget {
                     BoxShadow(
                       color: const Color(
                         0xFF3D2B1F,
-                      ).withOpacity(0.06),
+                      ).withValues(alpha:0.06),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -280,10 +278,10 @@ class _StatusDropdown extends StatelessWidget {
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: _statusColor.withOpacity(0.1),
+        color: _statusColor.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _statusColor.withOpacity(0.4),
+          color: _statusColor.withValues(alpha:0.4),
         ),
       ),
       child: DropdownButtonHideUnderline(

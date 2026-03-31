@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'auth/login_page.dart';
 import 'customer/customer_home.dart';
 import 'shop_owner/shop_dashboard.dart';
@@ -173,22 +175,23 @@ class _SplashScreenState
                 ),
               );
             },
-            child: const Column(
+            child: Column(
               mainAxisAlignment:
                   MainAxisAlignment.center,
               children: [
-                Text(
-                  '🧣',
-                  style: TextStyle(fontSize: 56),
+                Image.asset(
+                  'assets/images/chinar_leaf.png',
+                  height: 64,
+                  width: 64,
                 ),
                 SizedBox(height: 20),
                 Text(
                   'Sheen Bazaar',
-                  style: TextStyle(
-                    fontSize: 36,
+                  style: GoogleFonts.cormorantGaramond(
+                    fontSize: 40,
                     fontWeight: FontWeight.w300,
-                    color: Color(0xFFF5EDE0),
-                    letterSpacing: 3,
+                    color: const Color(0xFFF5EDE0),
+                    letterSpacing: 4,
                   ),
                 ),
                 SizedBox(height: 10),
@@ -213,19 +216,17 @@ class _SplashScreenState
             ),
           ),
 
-          // ── Loading indicator at bottom ──
-          const Positioned(
-            bottom: 48,
+          // ── Falling leaves Lottie at bottom ──
+          Positioned(
+            bottom: 0,
             left: 0,
             right: 0,
-            child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Color(0xFFC9A55A),
-                  strokeWidth: 1.5,
-                ),
+            child: IgnorePointer(
+              child: Lottie.asset(
+                'assets/lottie/Falling leaves.json',
+                height: 260,
+                fit: BoxFit.cover,
+                repeat: true,
               ),
             ),
           ),

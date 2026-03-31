@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/shop_model.dart';
 import '../../models/product_model.dart';
 import '../../services/shop_service.dart';
@@ -125,11 +127,10 @@ class _ShopDetailState extends State<ShopDetail> {
                               )
                             : null,
                         child: shop.logo.isEmpty
-                            ? const Text(
-                                '🧑‍🎨',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                ),
+                            ? const Icon(
+                                LucideIcons.user,
+                                color: Color(0xFFF5EDE0),
+                                size: 26,
                               )
                             : null,
                       ),
@@ -288,16 +289,12 @@ class _ShopDetailState extends State<ShopDetail> {
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Our Story',
-                        style: TextStyle(
-                          fontFamily: 'serif',
-                          fontSize: 20,
-                          fontWeight:
-                              FontWeight.w600,
-                          color: Color(
-                            0xFF3D2B1F,
-                          ),
+                        style: GoogleFonts.cormorantGaramond(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF3D2B1F),
                           letterSpacing: 0.4,
                         ),
                       ),
@@ -325,7 +322,7 @@ class _ShopDetailState extends State<ShopDetail> {
                             BoxShadow(
                               color: const Color(
                                 0xFF3D2B1F,
-                              ).withOpacity(0.06),
+                              ).withValues(alpha:0.06),
                               blurRadius: 10,
                               offset:
                                   const Offset(
@@ -352,8 +349,8 @@ class _ShopDetailState extends State<ShopDetail> {
                 ),
 
                 // ── Products Header ──
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
                     16,
                     4,
                     16,
@@ -361,11 +358,10 @@ class _ShopDetailState extends State<ShopDetail> {
                   ),
                   child: Text(
                     'Products',
-                    style: TextStyle(
-                      fontFamily: 'serif',
-                      fontSize: 20,
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF3D2B1F),
+                      color: const Color(0xFF3D2B1F),
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -455,13 +451,11 @@ class _ShopDetailState extends State<ShopDetail> {
   Widget _heroBg() {
     return Container(
       color: const Color(0xFF3D2B1F),
-      child: const Center(
-        child: Text(
-          '🏪',
-          style: TextStyle(
-            fontSize: 72,
-            color: Colors.white24,
-          ),
+      child: Center(
+        child: Image.asset(
+          'assets/images/pinjra_window.png',
+          height: 120,
+          color: Colors.white24,
         ),
       ),
     );
@@ -500,7 +494,7 @@ class _ProductCard extends StatelessWidget {
             BoxShadow(
               color: const Color(
                 0xFF3D2B1F,
-              ).withOpacity(0.07),
+              ).withValues(alpha:0.07),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -583,10 +577,11 @@ class _ProductCard extends StatelessWidget {
   Widget _imgFallback() {
     return Container(
       color: const Color(0xFFEDE0CC),
-      child: const Center(
-        child: Text(
-          '🧺',
-          style: TextStyle(fontSize: 40),
+      child: Center(
+        child: Image.asset(
+          'assets/images/wicker_basket.png',
+          height: 40,
+          color: const Color(0x333D2B1F),
         ),
       ),
     );

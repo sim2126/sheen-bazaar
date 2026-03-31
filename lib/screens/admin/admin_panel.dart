@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../auth/login_page.dart';
 import 'admin_shops.dart';
 import 'admin_orders.dart';
@@ -60,7 +61,7 @@ class AdminPanel extends StatelessWidget {
                     CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '👋 Welcome, Admin',
+                    'Welcome, Admin',
                     style: TextStyle(
                       color: Color(0xFFF5EDE0),
                       fontSize: 20,
@@ -91,7 +92,7 @@ class AdminPanel extends StatelessWidget {
               children: [
                 _StatCard(
                   label: 'Shops',
-                  icon: '🏪',
+                  icon: const Icon(LucideIcons.store, size: 24, color: Color(0xFF3D2B1F)),
                   stream: FirebaseFirestore
                       .instance
                       .collection('shops')
@@ -100,7 +101,7 @@ class AdminPanel extends StatelessWidget {
                 const SizedBox(width: 12),
                 _StatCard(
                   label: 'Orders',
-                  icon: '🧾',
+                  icon: const Icon(LucideIcons.receipt, size: 24, color: Color(0xFF3D2B1F)),
                   stream: FirebaseFirestore
                       .instance
                       .collection('orders')
@@ -109,7 +110,7 @@ class AdminPanel extends StatelessWidget {
                 const SizedBox(width: 12),
                 _StatCard(
                   label: 'Users',
-                  icon: '👥',
+                  icon: const Icon(LucideIcons.users, size: 24, color: Color(0xFF3D2B1F)),
                   stream: FirebaseFirestore
                       .instance
                       .collection('users')
@@ -194,7 +195,7 @@ class _SectionLabel extends StatelessWidget {
 
 class _StatCard extends StatelessWidget {
   final String label;
-  final String icon;
+  final Widget icon;
   final Stream<QuerySnapshot> stream;
 
   const _StatCard({
@@ -218,7 +219,7 @@ class _StatCard extends StatelessWidget {
             BoxShadow(
               color: const Color(
                 0xFF3D2B1F,
-              ).withOpacity(0.06),
+              ).withValues(alpha:0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -226,12 +227,7 @@ class _StatCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(
-              icon,
-              style: const TextStyle(
-                fontSize: 24,
-              ),
-            ),
+            icon,
             const SizedBox(height: 6),
             StreamBuilder<QuerySnapshot>(
               stream: stream,
@@ -291,7 +287,7 @@ class _ActionTile extends StatelessWidget {
             BoxShadow(
               color: const Color(
                 0xFF3D2B1F,
-              ).withOpacity(0.06),
+              ).withValues(alpha:0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
