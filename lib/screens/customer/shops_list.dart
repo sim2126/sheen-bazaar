@@ -156,21 +156,31 @@ class _ShopCard extends StatelessWidget {
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
                 children: [
-                  // Shop name + open badge
+                  // Shop name + badges
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          shop.shopName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight:
-                                FontWeight.w600,
-                            color: Color(
-                              0xFF3D2B1F,
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                shop.shopName,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF3D2B1F),
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
                             ),
-                            letterSpacing: 0.3,
-                          ),
+                            if (shop.isVerified) ...[
+                              const SizedBox(width: 6),
+                              const Tooltip(
+                                message: 'Verified Kashmiri Artisan',
+                                child: Icon(Icons.verified, size: 16, color: Color(0xFFC9A55A)),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       Container(

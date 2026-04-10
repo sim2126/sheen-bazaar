@@ -6,99 +6,110 @@ class AiAssistant extends StatefulWidget {
   const AiAssistant({super.key});
 
   @override
-  State<AiAssistant> createState() =>
-      _AiAssistantState();
+  State<AiAssistant> createState() => _AiAssistantState();
 }
 
-class _AiAssistantState
-    extends State<AiAssistant> {
+class _AiAssistantState extends State<AiAssistant> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
   bool _loading = false;
-  String _productContext = '';
+
+  // Catalog is loaded lazily once we have enough context from the user.
+  String? _loadedCatalog; // null = not loaded yet
+  bool _catalogLoading = false;
+
+  // Minimum signal needed before we bother fetching the catalog.
+  // We extract these from the conversation to build a targeted Firestore query.
+  String? _detectedCategory; // 'pashmina' | 'papier_mache' | 'wood' | null
+  int? _detectedMaxPrice;
 
   @override
   void initState() {
     super.initState();
-    _loadProductContext();
     _addWelcomeMessage();
   }
 
   void _addWelcomeMessage() {
-    _messages.add(
-      _ChatMessage(
-        text:
-            'Hello and Assalamu Alaikum! 👋 I\'m your Sheen Bazaar shopping assistant.\n\n'
-            'Ask me anything like:\n'
-            '• "Show me Pashmina shawls under ₹3000"\n'
-            '• "I need a traditional Kashmiri gift"\n'
-            '• "What wooden crafts do you have?"\n\n'
-            'How can I help you today?',
-        isUser: false,
-      ),
-    );
+    _messages.add(_ChatMessage(
+      text:
+          'Hello and Assalamu Alaikum! 👋 I\'m your Sheen Bazaar shopping assistant.\n\n'
+          'Tell me what you\'re looking for — a gift, a shawl, a wooden craft — and I\'ll find the best matches for you.\n\n'
+          'You can also mention your budget, like "under ₹2000".',
+      isUser: false,
+    ));
   }
 
-  Future<void> _loadProductContext() async {
+  /// Parses the conversation for category and budget signals so we can
+  /// fetch only relevant products instead of the entire catalog.
+  void _detectIntent(String text) {
+    final lower = text.toLowerCase();
+
+    // Category detection
+    if (lower.contains('pashmina') || lower.contains('shawl') || lower.contains('stole') || lower.contains('wool')) {
+      _detectedCategory = 'pashmina';
+    } else if (lower.contains('papier') || lower.contains('mache') || lower.contains('lacquer') || lower.contains('painted')) {
+      _detectedCategory = 'papier_mache';
+    } else if (lower.contains('wood') || lower.contains('walnut') || lower.contains('carv')) {
+      _detectedCategory = 'wood';
+    }
+
+    // Budget detection — look for ₹NNN or "under NNN" or "below NNN"
+    final budgetMatch = RegExp(r'(?:under|below|₹|rs\.?)\s*(\d[\d,]*)').firstMatch(lower);
+    if (budgetMatch != null) {
+      final priceStr = budgetMatch.group(1)!.replaceAll(',', '');
+      _detectedMaxPrice = int.tryParse(priceStr);
+    }
+  }
+
+  /// Fetches a targeted product catalog based on detected intent.
+  /// If intent is still unclear, returns an empty string so Claude asks
+  /// clarifying questions instead of guessing.
+  Future<String> _fetchCatalog() async {
+    setState(() => _catalogLoading = true);
     try {
-      // Fetch all shops
-      final shopsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('shops')
-              .where('isOpen', isEqualTo: true)
-              .get();
+      Query shopsQuery = FirebaseFirestore.instance
+          .collection('shops')
+          .where('isOpen', isEqualTo: true);
 
+      if (_detectedCategory != null) {
+        shopsQuery = shopsQuery.where('categoryId', isEqualTo: _detectedCategory);
+      }
+
+      final shopsSnap = await shopsQuery.get();
       final buffer = StringBuffer();
-      buffer.writeln(
-        'AVAILABLE PRODUCTS IN SHEEN BAZAAR:',
-      );
-      buffer.writeln(
-        '=====================================',
-      );
+      buffer.writeln('MATCHING PRODUCTS IN SHEEN BAZAAR:');
 
-      for (final shopDoc in shopsSnapshot.docs) {
-        final shopData = shopDoc.data();
-        final shopName =
-            shopData['shopName'] ?? '';
-        final location =
-            shopData['location'] ?? '';
-        final category =
-            shopData['categoryId'] ?? '';
+      for (final shopDoc in shopsSnap.docs) {
+        final shopData = shopDoc.data() as Map<String, dynamic>;
+        Query productsQuery = FirebaseFirestore.instance
+            .collection('shops')
+            .doc(shopDoc.id)
+            .collection('products')
+            .where('stock', isGreaterThan: 0);
 
-        // Fetch products for each shop
-        final productsSnapshot =
-            await FirebaseFirestore.instance
-                .collection('shops')
-                .doc(shopDoc.id)
-                .collection('products')
-                .get();
+        final productsSnap = await productsQuery.get();
+        final matchingProducts = productsSnap.docs.where((d) {
+          if (_detectedMaxPrice == null) return true;
+          final price = (d['price'] ?? 0) as num;
+          return price <= _detectedMaxPrice!;
+        }).toList();
 
-        if (productsSnapshot.docs.isNotEmpty) {
-          buffer.writeln('\nSHOP: $shopName');
-          buffer.writeln('Location: $location');
-          buffer.writeln('Category: $category');
-          buffer.writeln('Products:');
-
-          for (final productDoc
-              in productsSnapshot.docs) {
-            final p = productDoc.data();
-            buffer.writeln(
-              '  - ${p['name']} | Price: ₹${p['price']} | '
-              'Stock: ${p['stock']} | Description: ${p['description']}',
-            );
+        if (matchingProducts.isNotEmpty) {
+          buffer.writeln('\nSHOP: ${shopData['shopName']} | Location: ${shopData['location']}');
+          for (final pd in matchingProducts) {
+            final p = pd.data() as Map<String, dynamic>;
+            buffer.writeln('  - ${p['name']} | ₹${p['price']} | ${p['description']}');
           }
         }
       }
 
-      setState(() {
-        _productContext = buffer.toString();
-      });
-    } catch (e) {
-      setState(() {
-        _productContext =
-            'Product catalog temporarily unavailable.';
-      });
+      final catalog = buffer.toString();
+      setState(() { _loadedCatalog = catalog; _catalogLoading = false; });
+      return catalog;
+    } catch (_) {
+      setState(() => _catalogLoading = false);
+      return '';
     }
   }
 
@@ -106,70 +117,59 @@ class _AiAssistantState
     final text = _controller.text.trim();
     if (text.isEmpty || _loading) return;
 
+    _detectIntent(text);
+
     setState(() {
-      _messages.add(
-        _ChatMessage(text: text, isUser: true),
-      );
+      _messages.add(_ChatMessage(text: text, isUser: true));
       _loading = true;
       _controller.clear();
     });
 
     _scrollToBottom();
 
-    // Build conversation history for Claude
+    // Decide whether we have enough context to fetch the catalog now
+    final bool hasEnoughContext = _detectedCategory != null || _detectedMaxPrice != null;
+    String catalog = _loadedCatalog ?? '';
+
+    // Fetch catalog on first message that gives us context, or if already loaded refresh if needed
+    if (hasEnoughContext && _loadedCatalog == null) {
+      catalog = await _fetchCatalog();
+    }
+
+    // Build conversation history (skip welcome message at index 0)
     final conversationHistory = _messages
-        .where(
-          (m) =>
-              m.isUser ||
-              _messages.indexOf(m) > 0,
-        ) // skip welcome message
-        .map(
-          (m) => {
-            'role': m.isUser
-                ? 'user'
-                : 'assistant',
-            'content': m.text,
-          },
-        )
+        .where((m) => m.isUser || _messages.indexOf(m) > 0)
+        .map((m) => {'role': m.isUser ? 'user' : 'assistant', 'content': m.text})
         .toList();
 
-    final systemPrompt =
-        '''
-You are a knowledgeable and friendly shopping assistant for Sheen Bazaar, 
-a marketplace for authentic Kashmiri handicrafts. 
+    final String catalogSection = catalog.isNotEmpty
+        ? 'Here are the products matching the customer\'s needs:\n$catalog'
+        : 'The product catalog has not been loaded yet because we need more context. '
+          'Ask the customer for their preferred category (Pashmina / Papier Mache / Walnut Wood) '
+          'or budget before suggesting products.';
 
-Your job is to help customers find products that match their needs. 
-Be warm, culturally sensitive, and enthusiastic about Kashmiri crafts.
+    final systemPrompt = '''
+You are a warm, knowledgeable shopping assistant for Sheen Bazaar — a marketplace for authentic Kashmiri handicrafts.
 
-When suggesting products:
-- Match the customer's budget if mentioned
-- Match the category/type they are looking for
-- Explain what makes each product special
-- Mention the shop name and price clearly
-- If no exact match exists, suggest the closest alternatives
-- Keep responses concise and friendly
-- Use ₹ for prices
+Your goal: help customers find the perfect product. Be concise, culturally warm, and enthusiastic.
 
-Here is the current product catalog:
-$_productContext
+Rules:
+- If the catalog section says "not loaded yet", ask ONE clear clarifying question (category or budget).
+- When catalog is available, suggest 2–3 specific products with shop name and price.
+- Always use ₹ for prices.
+- Never make up products — only recommend what is in the catalog.
+- Keep responses under 150 words.
 
-If the catalog is empty or unavailable, let the customer know politely 
-and ask them to check back later.
+$catalogSection
 ''';
 
-    final response =
-        await ClaudeService.sendMessage(
-          systemPrompt: systemPrompt,
-          messages: conversationHistory,
-        );
+    final response = await ClaudeService.sendMessage(
+      systemPrompt: systemPrompt,
+      messages: conversationHistory,
+    );
 
     setState(() {
-      _messages.add(
-        _ChatMessage(
-          text: response,
-          isUser: false,
-        ),
-      );
+      _messages.add(_ChatMessage(text: response, isUser: false));
       _loading = false;
     });
 
@@ -222,35 +222,21 @@ and ask them to check back later.
       ),
       body: Column(
         children: [
-          // ── Product loading indicator ──
-          if (_productContext.isEmpty)
+          // ── Catalog loading indicator ──
+          if (_catalogLoading)
             Container(
-              padding: const EdgeInsets.symmetric(
-                vertical: 8,
-                horizontal: 16,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               color: const Color(0xFFEDE0CC),
               child: const Row(
                 children: [
                   SizedBox(
-                    width: 14,
-                    height: 14,
-                    child:
-                        CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Color(
-                            0xFFC8821A,
-                          ),
-                        ),
+                    width: 14, height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFC8821A)),
                   ),
                   SizedBox(width: 10),
                   Text(
-                    'Loading product catalog...',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF8FA8A0),
-                      fontStyle: FontStyle.italic,
-                    ),
+                    'Finding matching products...',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF8FA8A0), fontStyle: FontStyle.italic),
                   ),
                 ],
               ),

@@ -10,6 +10,7 @@ class ShopModel {
   final String logo;
   final String location;
   final bool isOpen;
+  final bool isVerified;
   final double rating;
   final int totalReviews;
   final Timestamp createdAt;
@@ -24,6 +25,7 @@ class ShopModel {
     required this.logo,
     required this.location,
     required this.isOpen,
+    this.isVerified = false,
     required this.rating,
     required this.totalReviews,
     required this.createdAt,
@@ -43,10 +45,10 @@ class ShopModel {
       logo: data['logo'] ?? '',
       location: data['location'] ?? '',
       isOpen: data['isOpen'] ?? false,
+      isVerified: data['isVerified'] ?? false,
       rating: (data['rating'] ?? 0).toDouble(),
       totalReviews: data['totalReviews'] ?? 0,
-      createdAt:
-          data['createdAt'] ?? Timestamp.now(),
+      createdAt: data['createdAt'] ?? Timestamp.now(),
     );
   }
 }

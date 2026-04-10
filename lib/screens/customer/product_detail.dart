@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../models/product_model.dart';
+import 'package:photo_view/photo_view.dart';
+import '../../models/product_model.dart' show ProductModel, ProductDetails;
 import '../../models/shop_model.dart';
 import '../../providers/cart_provider.dart';
 import '../../widgets/login_required_dialog.dart';
@@ -38,19 +39,39 @@ class ProductDetail extends StatelessWidget {
           crossAxisAlignment:
               CrossAxisAlignment.start,
           children: [
-            // Product image
-            SizedBox(
-              height: 280,
-              width: double.infinity,
-              child: product.image.isNotEmpty
-                  ? Image.network(
-                      product.image,
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (_, __, ___) =>
-                              _imgFallback(),
-                    )
-                  : _imgFallback(),
+            // Product image — tap to zoom
+            GestureDetector(
+              onTap: product.image.isNotEmpty
+                  ? () => _openZoom(context, product.image)
+                  : null,
+              child: Stack(
+                children: [
+                  SizedBox(
+                    height: 280,
+                    width: double.infinity,
+                    child: product.image.isNotEmpty
+                        ? Image.network(
+                            product.image,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _imgFallback(),
+                          )
+                        : _imgFallback(),
+                  ),
+                  if (product.image.isNotEmpty)
+                    Positioned(
+                      bottom: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.zoom_in, color: Colors.white, size: 18),
+                      ),
+                    ),
+                ],
+              ),
             ),
 
             Padding(
@@ -120,116 +141,19 @@ class ProductDetail extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Craft narrative
-                  Container(
-                    padding: const EdgeInsets.all(
-                      14,
+                  // Craft description — structured if AI-generated, plain text fallback
+                  if (product.details != null && !product.details!.isEmpty)
+                    _StructuredDescription(
+                      details: product.details!,
+                      shop: shop,
+                      product: product,
+                    )
+                  else
+                    _PlainDescription(
+                      description: product.description,
+                      shop: shop,
+                      product: product,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.circular(
-                            12,
-                          ),
-                      border: const Border(
-                        left: BorderSide(
-                          color: Color(
-                            0xFFC9A55A,
-                          ),
-                          width: 3,
-                        ),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFF3D2B1F,
-                          ).withOpacity(0.06),
-                          blurRadius: 10,
-                          offset: const Offset(
-                            0,
-                            3,
-                          ),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
-                      children: [
-                        const Text(
-                          '✦ About this craft',
-                          style: TextStyle(
-                            fontSize: 12,
-                            letterSpacing: 0.8,
-                            color: Color(
-                              0xFFC8821A,
-                            ),
-                            fontWeight:
-                                FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          product.description,
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.7,
-                            color:
-                                Colors.grey[700],
-                            fontStyle:
-                                FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Details
-                  Container(
-                    padding: const EdgeInsets.all(
-                      14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.circular(
-                            12,
-                          ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFF3D2B1F,
-                          ).withOpacity(0.06),
-                          blurRadius: 10,
-                          offset: const Offset(
-                            0,
-                            3,
-                          ),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _detailRow(
-                          'Category',
-                          product.categoryId,
-                        ),
-                        _detailRow(
-                          'Stock',
-                          product.stock > 0
-                              ? '${product.stock} available'
-                              : 'Out of stock',
-                        ),
-                        _detailRow(
-                          'Location',
-                          shop.location,
-                        ),
-                      ],
-                    ),
-                  ),
 
                   const SizedBox(height: 28),
 
@@ -306,31 +230,24 @@ class ProductDetail extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 8,
-      ),
-      child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[500],
-            ),
+  void _openZoom(BuildContext context, String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+            elevation: 0,
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF3D2B1F),
-            ),
+          body: PhotoView(
+            imageProvider: NetworkImage(imageUrl),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 3,
+            heroAttributes: PhotoViewHeroAttributes(tag: imageUrl),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -344,6 +261,273 @@ class ProductDetail extends StatelessWidget {
           height: 64,
           color: const Color(0x333D2B1F),
         ),
+      ),
+    );
+  }
+}
+
+// ── Structured description (AI-generated with image) ──────────────────────────
+
+class _StructuredDescription extends StatelessWidget {
+  final ProductDetails details;
+  final ShopModel shop;
+  final ProductModel product;
+
+  const _StructuredDescription({
+    required this.details,
+    required this.shop,
+    required this.product,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tagline
+        if (details.tagline != null) ...[
+          Text(
+            details.tagline!,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF3D2B1F),
+              fontStyle: FontStyle.italic,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+
+        // Narrative
+        if (details.narrative != null) ...[
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: const Border(
+                left: BorderSide(color: Color(0xFFC9A55A), width: 3),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3D2B1F).withOpacity(0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '✦ About this craft',
+                  style: TextStyle(
+                    fontSize: 12,
+                    letterSpacing: 0.8,
+                    color: Color(0xFFC8821A),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  details.narrative!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.7,
+                    color: Colors.grey[700],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Product specs grid
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3D2B1F).withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              if (details.material != null)
+                _specRow('Material', details.material!),
+              if (details.craft != null)
+                _specRow('Craft', details.craft!),
+              if (details.color != null)
+                _specRow('Color', details.color!),
+              if (details.dimensions != null)
+                _specRow('Dimensions', details.dimensions!),
+              if (details.occasion != null)
+                _specRow('Occasion', details.occasion!),
+              _specRow(
+                'Stock',
+                product.stock > 0 ? '${product.stock} available' : 'Out of stock',
+              ),
+              _specRow('Location', shop.location),
+              if (details.care != null)
+                _specRow('Care', details.care!),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _specRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF3D2B1F),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Plain text fallback (products without AI-generated details) ───────────────
+
+class _PlainDescription extends StatelessWidget {
+  final String description;
+  final ShopModel shop;
+  final ProductModel product;
+
+  const _PlainDescription({
+    required this.description,
+    required this.shop,
+    required this.product,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: const Border(
+              left: BorderSide(color: Color(0xFFC9A55A), width: 3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3D2B1F).withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '✦ About this craft',
+                style: TextStyle(
+                  fontSize: 12,
+                  letterSpacing: 0.8,
+                  color: Color(0xFFC8821A),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.7,
+                  color: Colors.grey[700],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3D2B1F).withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _detailRow('Category', product.categoryId),
+              _detailRow(
+                'Stock',
+                product.stock > 0 ? '${product.stock} available' : 'Out of stock',
+              ),
+              _detailRow('Location', shop.location),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF3D2B1F),
+            ),
+          ),
+        ],
       ),
     );
   }

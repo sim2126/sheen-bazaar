@@ -6,6 +6,7 @@ import '../../models/shop_model.dart';
 import 'create_shop.dart';
 import 'manage_products.dart';
 import 'vendor_orders.dart';
+import 'vendor_analytics.dart';
 import '../auth/login_page.dart';
 
 class ShopDashboard extends StatefulWidget {
@@ -422,16 +423,23 @@ class _ShopDashboardState
             _ActionTile(
               icon: Icons.receipt_long_outlined,
               title: 'View Orders',
-              subtitle:
-                  'See all orders placed at your shop',
+              subtitle: 'See all orders placed at your shop',
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => VendorOrders(
-                      shopId: shop.id,
-                    ),
-                  ),
+                  MaterialPageRoute(builder: (_) => VendorOrders(shopId: shop.id)),
+                );
+              },
+            ),
+
+            _ActionTile(
+              icon: Icons.bar_chart_rounded,
+              title: 'Analytics',
+              subtitle: 'Sales, revenue, best sellers & low stock alerts',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => VendorAnalytics(shopId: shop.id)),
                 );
               },
             ),
