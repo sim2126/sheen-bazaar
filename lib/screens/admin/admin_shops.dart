@@ -11,14 +11,18 @@ class AdminShops extends StatelessWidget {
           .orderBy('createdAt', descending: true)
           .snapshots();
 
-  Future<void> _toggleBan(
-    String shopId,
-    bool currentIsOpen,
-  ) async {
+  Future<void> _toggleBan(String shopId, bool currentIsOpen) async {
     await FirebaseFirestore.instance
         .collection('shops')
         .doc(shopId)
         .update({'isOpen': !currentIsOpen});
+  }
+
+  Future<void> _toggleVerified(String shopId, bool currentIsVerified) async {
+    await FirebaseFirestore.instance
+        .collection('shops')
+        .doc(shopId)
+        .update({'isVerified': !currentIsVerified});
   }
 
   @override
@@ -66,8 +70,8 @@ class AdminShops extends StatelessWidget {
               final data =
                   doc.data()
                       as Map<String, dynamic>;
-              final isOpen =
-                  data['isOpen'] ?? false;
+              final isOpen = data['isOpen'] ?? false;
+              final isVerified = data['isVerified'] ?? false;
 
               return Container(
                 margin: const EdgeInsets.only(
@@ -162,55 +166,57 @@ class AdminShops extends StatelessWidget {
                         ],
                       ),
                       trailing: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment
-                                .center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           // Ban/unban toggle
                           GestureDetector(
-                            onTap: () =>
-                                _confirmToggle(
-                                  context,
-                                  doc.id,
-                                  data['shopName'] ??
-                                      '',
-                                  isOpen,
-                                ),
+                            onTap: () => _confirmToggle(
+                              context, doc.id, data['shopName'] ?? '', isOpen),
                             child: Container(
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                    horizontal:
-                                        10,
-                                    vertical: 5,
-                                  ),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: isOpen
-                                    ? const Color(
-                                        0xFFE8F5E9,
-                                      )
-                                    : const Color(
-                                        0xFFFFEBEE,
-                                      ),
-                                borderRadius:
-                                    BorderRadius.circular(
-                                      20,
-                                    ),
+                                color: isOpen ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                                borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                isOpen
-                                    ? 'Active'
-                                    : 'Banned',
+                                isOpen ? 'Active' : 'Banned',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight:
-                                      FontWeight
-                                          .w600,
-                                  color: isOpen
-                                      ? Colors
-                                            .green[700]
-                                      : Colors
-                                            .red[700],
+                                  fontSize: 11, fontWeight: FontWeight.w600,
+                                  color: isOpen ? Colors.green[700] : Colors.red[700],
                                 ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          // Verify toggle
+                          GestureDetector(
+                            onTap: () => _toggleVerified(doc.id, isVerified),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isVerified ? const Color(0xFFFFF8E7) : const Color(0xFFF5F5F5),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isVerified ? const Color(0xFFC9A55A) : Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isVerified ? Icons.verified : Icons.verified_outlined,
+                                    size: 12,
+                                    color: isVerified ? const Color(0xFFC9A55A) : Colors.grey,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    isVerified ? 'Verified' : 'Verify',
+                                    style: TextStyle(
+                                      fontSize: 10, fontWeight: FontWeight.w600,
+                                      color: isVerified ? const Color(0xFFC8821A) : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

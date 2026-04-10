@@ -57,6 +57,7 @@ class _CartScreenState extends State<CartScreen> {
         batch.set(orderRef, {
           'userId': uid,
           'shopId': shopId,
+          'shopName': shopItems.first.shop.shopName,
           'status': 'placed',
           'total': total,
           'createdAt': Timestamp.now(),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -150,14 +151,27 @@ class _ManageProductsState extends State<ManageProducts> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Text(
-                        'Stock: ${p.stock}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: p.stock > 0
-                              ? Colors.green[600]
-                              : Colors.red[400],
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Stock: ${p.stock}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: p.stock == 0
+                                  ? Colors.red[400]
+                                  : p.stock <= 3
+                                      ? Colors.orange[700]
+                                      : Colors.green[600],
+                            ),
+                          ),
+                          if (p.stock == 0) ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.warning_rounded, size: 13, color: Colors.red),
+                          ] else if (p.stock <= 3) ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.warning_amber_rounded, size: 13, color: Colors.orange),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -260,6 +274,7 @@ class _AddEditProductState extends State<AddEditProduct> {
   final _stockCtrl = TextEditingController();
 
   XFile? _imageFile;
+  ProductDetails? _generatedDetails;
 
   String _categoryId = 'pashmina';
   bool _loading = false;
@@ -320,6 +335,8 @@ class _AddEditProductState extends State<AddEditProduct> {
         'createdAt': _isEditing
             ? widget.existingProduct!.createdAt
             : Timestamp.now(),
+        if (_generatedDetails != null)
+          'details': _generatedDetails!.toMap(),
       };
 
       if (_isEditing) {
@@ -389,10 +406,13 @@ class _AddEditProductState extends State<AddEditProduct> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: _AiGenerateButton(
-                      onGenerated: (text) =>
-                          setState(() => _descCtrl.text = text),
+                      onGenerated: (text, details) => setState(() {
+                        _descCtrl.text = text;
+                        _generatedDetails = details;
+                      }),
                       getProductName: () => _nameCtrl.text.trim(),
                       getCategoryId: () => _categoryId,
+                      getImageFile: () => _imageFile,
                     ),
                   ),
                 ],
@@ -542,14 +562,16 @@ class _AddEditProductState extends State<AddEditProduct> {
 }
 
 class _AiGenerateButton extends StatefulWidget {
-  final Function(String) onGenerated;
+  final Function(String description, ProductDetails? details) onGenerated;
   final String Function() getProductName;
   final String Function() getCategoryId;
+  final XFile? Function() getImageFile;
 
   const _AiGenerateButton({
     required this.onGenerated,
     required this.getProductName,
     required this.getCategoryId,
+    required this.getImageFile,
   });
 
   @override
@@ -580,31 +602,94 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
             ? 'Papier Mache'
             : 'Walnut Wood';
 
-    final response = await ClaudeService.sendMessage(
-      systemPrompt:
-          'You are an expert in Kashmiri handicrafts with deep knowledge '
-          'of the cultural heritage, craftsmanship techniques, and artisan '
-          'traditions of Kashmir. Write rich, authentic product descriptions '
-          'for a marketplace app. Keep descriptions between 2-4 sentences. '
-          'Be evocative and highlight the handmade nature and cultural significance. '
-          'Do not use markdown formatting — plain text only.',
-      messages: [
-        {
-          'role': 'user',
-          'content': 'Write a product description for: "$name" '
-              'Category: $categoryName Kashmiri handicraft.',
-        },
-      ],
-    );
+    const systemPrompt =
+        'You are a product listing specialist for a premium Kashmiri handicrafts marketplace.\n\n'
+        'Output ONLY a valid JSON object — no markdown, no explanation, no code fences.\n\n'
+        'JSON schema (all fields are strings, omit a field only if truly unknown):\n'
+        '{\n'
+        '  "tagline": "One punchy headline (max 12 words) that captures the product essence",\n'
+        '  "narrative": "2–3 sentences: technique/origin, what you see (color, pattern, texture, motifs), and what makes it special",\n'
+        '  "material": "Primary material and grade, e.g. Pure Pashmina wool (Grade A)",\n'
+        '  "craft": "Craft technique, e.g. Sozni hand-embroidery or Kani pit-loom weave",\n'
+        '  "color": "Exact color(s) and any accent colors visible",\n'
+        '  "dimensions": "Approximate size if inferable, else omit",\n'
+        '  "occasion": "Best occasions or use cases, e.g. Weddings, winter gifting, daily wear",\n'
+        '  "care": "Care instruction, e.g. Dry clean only. Store in soft muslin."\n'
+        '}\n\n'
+        'Rules for narrative:\n'
+        '- Be specific to THIS product — not generic Kashmiri craft facts\n'
+        '- Lead with the unique technique or material\n'
+        '- Describe what is actually visible: color, weave, embroidery, motifs, finish\n'
+        '- Plain text — no bullet points, markdown, or asterisks inside any field';
 
-    widget.onGenerated(response);
+    final imageFile = widget.getImageFile();
+    String rawResponse;
+
+    if (imageFile != null) {
+      final imageBytes = await imageFile.readAsBytes();
+      final userText =
+          'Analyze this product image carefully.\n\n'
+          'Product name: "$name"\n'
+          'Category: $categoryName Kashmiri handicraft\n\n'
+          'From the image, identify: exact color(s), pattern type, texture/weave/finish, '
+          'any embroidery or decorative motifs, and overall form. '
+          'Use only what you actually see — not assumptions.\n\n'
+          'Return the JSON object as specified.';
+
+      rawResponse = await ClaudeService.sendMessageWithImage(
+        systemPrompt: systemPrompt,
+        userText: userText,
+        imageBytes: imageBytes,
+      );
+    } else {
+      rawResponse = await ClaudeService.sendMessage(
+        systemPrompt: systemPrompt,
+        messages: [
+          {
+            'role': 'user',
+            'content':
+                'Product name: "$name". Category: $categoryName Kashmiri handicraft. '
+                'No image is available. Use your knowledge of this craft type to fill '
+                'in as much detail as possible. Return the JSON object as specified.',
+          },
+        ],
+      );
+    }
+
+    // Parse JSON — gracefully fall back to raw text if parsing fails
+    ProductDetails? details;
+    String plainDescription = rawResponse;
+    try {
+      // Strip any accidental markdown fences Claude may add
+      final cleaned = rawResponse
+          .replaceAll(RegExp(r'```json\s*'), '')
+          .replaceAll(RegExp(r'```\s*'), '')
+          .trim();
+      final parsed = jsonDecode(cleaned) as Map<String, dynamic>;
+      details = ProductDetails.fromMap(parsed);
+      // Build the plain-text fallback from structured fields for the text field preview
+      plainDescription = [
+        if (details.tagline != null) details.tagline!,
+        if (details.narrative != null) details.narrative!,
+        if (details.material != null) 'Material: ${details.material}',
+        if (details.craft != null) 'Craft: ${details.craft}',
+        if (details.color != null) 'Color: ${details.color}',
+        if (details.occasion != null) 'Occasion: ${details.occasion}',
+        if (details.care != null) 'Care: ${details.care}',
+      ].join('\n');
+    } catch (_) {
+      // JSON parse failed — rawResponse is already set as plainDescription
+    }
+
+    widget.onGenerated(plainDescription, details);
     setState(() => _loading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = widget.getImageFile() != null;
     return Tooltip(
-      message: 'Generate with AI',
+      message: hasImage ? 'Generate from image' : 'Generate with AI',
       child: GestureDetector(
         onTap: _loading ? null : _generate,
         child: Container(

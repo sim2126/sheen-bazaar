@@ -8,6 +8,8 @@ import '../../utils/transitions.dart';
 import 'shops_list.dart';
 import 'cart_icon_button.dart';
 import 'ai_assistant.dart';
+import 'order_history.dart';
+import 'search_screen.dart';
 import '../auth/login_page.dart';
 import '../../widgets/login_required_dialog.dart';
 
@@ -113,6 +115,11 @@ class _CustomerHomeState extends State<CustomerHome> {
 
   List<Widget> _guestActions() {
     return [
+      IconButton(
+        icon: const Icon(Icons.search, color: Color(0xFFF5EDE0)),
+        tooltip: 'Search products',
+        onPressed: () => Navigator.push(context, fadeSlideRoute(const SearchScreen())),
+      ),
       PopupMenuButton<String>(
         icon: const Icon(Icons.person_outline, color: Color(0xFFF5EDE0)),
         color: const Color(0xFFF5EDE0),
@@ -164,6 +171,16 @@ class _CustomerHomeState extends State<CustomerHome> {
 
   List<Widget> _loggedInActions() {
     return [
+      IconButton(
+        icon: const Icon(Icons.search, color: Color(0xFFF5EDE0)),
+        tooltip: 'Search products',
+        onPressed: () => Navigator.push(context, fadeSlideRoute(const SearchScreen())),
+      ),
+      IconButton(
+        icon: const Icon(Icons.receipt_long_outlined, color: Color(0xFFF5EDE0)),
+        tooltip: 'My orders',
+        onPressed: () => Navigator.push(context, fadeSlideRoute(const OrderHistory())),
+      ),
       CartIconButton(),
       IconButton(
         icon: const Icon(Icons.logout, color: Color(0xFFF5EDE0)),
