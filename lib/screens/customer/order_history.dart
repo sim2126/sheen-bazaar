@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../theme/app_theme.dart';
 import 'write_review.dart';
 
 class OrderHistory extends StatelessWidget {
@@ -16,11 +17,11 @@ class OrderHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5EDE0),
+      backgroundColor: AppColors.walnut,
       appBar: AppBar(
         title: const Text('My Orders'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
+          icon: const Icon(Icons.arrow_back_ios, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -29,7 +30,7 @@ class OrderHistory extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC8821A)),
+              child: CircularProgressIndicator(color: AppColors.terracotta),
             );
           }
 
@@ -38,15 +39,15 @@ class OrderHistory extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/images/wicker_basket.png', height: 90),
+                  const Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 48)),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'No orders yet.\nStart shopping to see your orders here.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.stone,
                       fontStyle: FontStyle.italic,
-                      height: 1.5,
+                      height: 1.6,
                     ),
                   ),
                 ],
@@ -77,10 +78,10 @@ class _OrderCard extends StatelessWidget {
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'confirmed': return Colors.blue;
-      case 'dispatched': return Colors.purple;
-      case 'delivered': return Colors.green;
-      default: return Colors.orange;
+      case 'confirmed': return Colors.blue[300]!;
+      case 'dispatched': return Colors.purple[300]!;
+      case 'delivered': return Colors.green[400]!;
+      default: return AppColors.terracottaLight;
     }
   }
 
@@ -105,26 +106,16 @@ class _OrderCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3D2B1F).withValues(alpha: 0.07),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+      decoration: AppDecorations.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // ── Header ───────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF3D2B1F),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              color: AppColors.walnutDeep,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -134,32 +125,23 @@ class _OrderCard extends StatelessWidget {
                   children: [
                     Text(
                       'Order #${orderId.substring(0, 8).toUpperCase()}',
-                      style: const TextStyle(
-                        color: Color(0xFFF5EDE0),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w700, color: AppColors.cream),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      shopName,
-                      style: const TextStyle(
-                        color: Color(0xFF8FA8A0),
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
+                    Text(shopName,
+                      style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic)),
                   ],
                 ),
                 Text(
                   '${createdAt.day}/${createdAt.month}/${createdAt.year}',
-                  style: const TextStyle(color: Color(0xFF8FA8A0), fontSize: 12),
+                  style: AppTextStyles.caption,
                 ),
               ],
             ),
           ),
 
-          // Items
+          // ── Items ─────────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
             child: Column(
@@ -173,7 +155,7 @@ class _OrderCard extends StatelessWidget {
                         child: Image.network(
                           item['image'],
                           width: 44, height: 44, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _imgFallback(),
+                          errorBuilder: (context, err, stack) => _imgFallback(),
                         ),
                       )
                     else _imgFallback(),
@@ -181,21 +163,16 @@ class _OrderCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item['name'] ?? '',
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF3D2B1F)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.cream),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Text(
-                      'x${item['qty']}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                    ),
+                    Text('x${item['qty']}', style: AppTextStyles.caption),
                     const SizedBox(width: 8),
                     Text(
                       '₹${item['price']}',
-                      style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFB5603A),
-                      ),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600, color: AppColors.saffron),
                     ),
                   ],
                 ),
@@ -203,9 +180,10 @@ class _OrderCard extends StatelessWidget {
             ),
           ),
 
-          const Divider(height: 20, indent: 14, endIndent: 14),
+          Divider(height: 20, indent: 14, endIndent: 14,
+            color: AppColors.border),
 
-          // Total + status
+          // ── Total + status ────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
             child: Row(
@@ -213,16 +191,13 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Text(
                   'Total: ₹${total.toString()}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: Color(0xFF3D2B1F),
-                  ),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontWeight: FontWeight.w700, color: AppColors.cream),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: _statusColor(status).withValues(alpha: 0.1),
+                    color: _statusColor(status).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: _statusColor(status).withValues(alpha: 0.4)),
                   ),
@@ -233,9 +208,8 @@ class _OrderCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         status[0].toUpperCase() + status.substring(1),
-                        style: TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600, color: _statusColor(status),
-                        ),
+                        style: AppTextStyles.caption.copyWith(
+                          fontWeight: FontWeight.w600, color: _statusColor(status)),
                       ),
                     ],
                   ),
@@ -244,10 +218,10 @@ class _OrderCard extends StatelessWidget {
             ),
           ),
 
-          // Tracking timeline
+          // ── Timeline ─────────────────────────────────────────────────────
           _OrderTimeline(status: status),
 
-          // Review button for delivered orders
+          // ── Review prompt (delivered only) ────────────────────────────────
           if (isDelivered && shopId.isNotEmpty)
             _ReviewPrompt(orderId: orderId, shopId: shopId, shopName: shopName),
         ],
@@ -255,16 +229,15 @@ class _OrderCard extends StatelessWidget {
     );
   }
 
-  Widget _imgFallback() {
-    return Container(
-      width: 44, height: 44,
-      color: const Color(0xFFEDE0CC),
-      child: Center(
-        child: Image.asset('assets/images/wicker_basket.png', height: 24, color: const Color(0x553D2B1F)),
-      ),
-    );
-  }
+  Widget _imgFallback() => Container(
+    width: 44, height: 44, color: AppColors.surface,
+    child: const Center(
+      child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 14)),
+    ),
+  );
 }
+
+// ── Timeline ──────────────────────────────────────────────────────────────────
 
 class _OrderTimeline extends StatelessWidget {
   final String status;
@@ -294,7 +267,7 @@ class _OrderTimeline extends StatelessWidget {
             return Expanded(
               child: Container(
                 height: 2,
-                color: isCompleted ? const Color(0xFFC9A55A) : const Color(0xFFE0D0BC),
+                color: isCompleted ? AppColors.terracotta : AppColors.surface,
               ),
             );
           }
@@ -307,18 +280,20 @@ class _OrderTimeline extends StatelessWidget {
                 width: 20, height: 20,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isCompleted ? const Color(0xFFC9A55A) : const Color(0xFFE0D0BC),
+                  color: isCompleted ? AppColors.terracotta : AppColors.surface,
+                  border: Border.all(
+                    color: isCompleted ? AppColors.terracotta : AppColors.border),
                 ),
                 child: isCompleted
-                    ? const Icon(Icons.check, size: 12, color: Colors.white)
+                    ? const Icon(Icons.check, size: 12, color: AppColors.cream)
                     : null,
               ),
               const SizedBox(height: 3),
               Text(
                 steps[stepIndex],
-                style: TextStyle(
+                style: AppTextStyles.caption.copyWith(
                   fontSize: 9,
-                  color: isCompleted ? const Color(0xFF3D2B1F) : Colors.grey,
+                  color: isCompleted ? AppColors.stoneLight : AppColors.stone,
                   fontWeight: isCompleted ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
@@ -329,6 +304,8 @@ class _OrderTimeline extends StatelessWidget {
     );
   }
 }
+
+// ── Review prompt ─────────────────────────────────────────────────────────────
 
 class _ReviewPrompt extends StatefulWidget {
   final String orderId;
@@ -375,11 +352,11 @@ class _ReviewPromptState extends State<_ReviewPrompt> {
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
         child: Row(
           children: [
-            const Icon(Icons.star, size: 14, color: Color(0xFFC9A55A)),
+            const Icon(Icons.star, size: 14, color: AppColors.saffron),
             const SizedBox(width: 6),
             Text(
               'You reviewed this order',
-              style: TextStyle(fontSize: 12, color: Colors.grey[500], fontStyle: FontStyle.italic),
+              style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic),
             ),
           ],
         ),
@@ -404,10 +381,10 @@ class _ReviewPromptState extends State<_ReviewPrompt> {
         icon: const Icon(Icons.star_outline, size: 16),
         label: Text('Rate ${widget.shopName}'),
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFC8821A),
-          side: const BorderSide(color: Color(0xFFC8821A)),
+          foregroundColor: AppColors.terracottaLight,
+          side: const BorderSide(color: AppColors.terracotta),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          textStyle: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
         ),
       ),
     );

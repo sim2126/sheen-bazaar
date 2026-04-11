@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/claude_service.dart';
+import '../../services/gemini_service.dart';
 
 class AiAssistant extends StatefulWidget {
   const AiAssistant({super.key});
@@ -163,7 +163,7 @@ Rules:
 $catalogSection
 ''';
 
-    final response = await ClaudeService.sendMessage(
+    final response = await GeminiService.sendMessage(
       systemPrompt: systemPrompt,
       messages: conversationHistory,
     );

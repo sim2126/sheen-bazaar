@@ -1,27 +1,22 @@
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/shop_model.dart';
 import '../../models/product_model.dart';
 import '../../services/shop_service.dart';
 import '../../utils/transitions.dart';
+import '../../theme/app_theme.dart';
 import 'product_detail.dart';
 import 'cart_icon_button.dart';
 
 class ShopDetail extends StatefulWidget {
   final ShopModel shop;
-
-  const ShopDetail({
-    super.key,
-    required this.shop,
-  });
+  const ShopDetail({super.key, required this.shop});
 
   @override
-  State<ShopDetail> createState() =>
-      _ShopDetailState();
+  State<ShopDetail> createState() => _ShopDetailState();
 }
 
 class _ShopDetailState extends State<ShopDetail> {
@@ -30,9 +25,7 @@ class _ShopDetailState extends State<ShopDetail> {
   @override
   void initState() {
     super.initState();
-    _products = ShopService().getProducts(
-      widget.shop.id,
-    );
+    _products = ShopService().getProducts(widget.shop.id);
   }
 
   @override
@@ -40,31 +33,23 @@ class _ShopDetailState extends State<ShopDetail> {
     final shop = widget.shop;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5EDE0),
+      backgroundColor: AppColors.walnut,
       body: CustomScrollView(
         slivers: [
-          // ── Hero App Bar ──
+          // ── Hero App Bar ─────────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
-            backgroundColor: const Color(
-              0xFF3D2B1F,
-            ),
+            backgroundColor: AppColors.walnutDeep,
             actions: [CartIconButton()],
             leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: Color(0xFFF5EDE0),
-              ),
-              onPressed: () =>
-                  Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios, size: 18, color: AppColors.cream),
+              onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 shop.shopName,
-                style: const TextStyle(
-                  color: Color(0xFFF5EDE0),
-                  fontSize: 16,
+                style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.5,
                 ),
@@ -72,32 +57,22 @@ class _ShopDetailState extends State<ShopDetail> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Cover image
                   shop.coverImage.isNotEmpty
                       ? Image.network(
                           shop.coverImage,
                           fit: BoxFit.cover,
-                          errorBuilder:
-                              (context, error, stackTrace) =>
-                                  _heroBg(),
+                          errorBuilder: (context, error, stack) => _heroBg(),
                         )
                       : _heroBg(),
-                  // Gradient overlay
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        begin:
-                            Alignment.topCenter,
-                        end: Alignment
-                            .bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Color(0xCC1E1208),
-                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Color(0xDD1A130A)],
                       ),
                     ),
                   ),
-                  // Glassmorphic strip at the top (AppBar area)
                   Positioned(
                     top: 0,
                     left: 0,
@@ -107,7 +82,7 @@ class _ShopDetailState extends State<ShopDetail> {
                         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                         child: Container(
                           height: kToolbarHeight,
-                          color: const Color(0xFF1E1208).withValues(alpha: 0.15),
+                          color: AppColors.walnutDeep.withValues(alpha: 0.15),
                         ),
                       ),
                     ),
@@ -119,257 +94,131 @@ class _ShopDetailState extends State<ShopDetail> {
 
           SliverToBoxAdapter(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Artisan Strip ──
+                // ── Artisan strip ────────────────────────────────────────
                 Transform.translate(
                   offset: const Offset(0, -20),
                   child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF3D2B1F),
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
+                    decoration: const BoxDecoration(
+                      color: AppColors.walnutDeep,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                     ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-                  child: Row(
-                    children: [
-                      // Logo
-                      CircleAvatar(
-                        radius: 26,
-                        backgroundColor:
-                            const Color(
-                              0xFFC9A55A,
-                            ),
-                        backgroundImage:
-                            shop.logo.isNotEmpty
-                            ? NetworkImage(
-                                shop.logo,
-                              )
-                            : null,
-                        child: shop.logo.isEmpty
-                            ? const Icon(
-                                LucideIcons.user,
-                                color: Color(0xFFF5EDE0),
-                                size: 26,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  shop.shopName,
-                                  style: const TextStyle(
-                                    color: Color(0xFFF5EDE0),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                if (shop.isVerified) ...[
-                                  const SizedBox(width: 6),
-                                  const Tooltip(
-                                    message: 'Verified Kashmiri Artisan',
-                                    child: Icon(Icons.verified, size: 16, color: Color(0xFFC9A55A)),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 2,
-                            ),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons
-                                      .location_on,
-                                  size: 12,
-                                  color: Color(
-                                    0xFF8FA8A0,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 3,
-                                ),
-                                Text(
-                                  shop.location,
-                                  style: const TextStyle(
-                                    color: Color(
-                                      0xFF8FA8A0,
-                                    ),
-                                    fontSize: 12,
-                                    fontStyle:
-                                        FontStyle
-                                            .italic,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundColor: AppColors.terracottaLight,
+                          backgroundImage:
+                              shop.logo.isNotEmpty ? NetworkImage(shop.logo) : null,
+                          child: shop.logo.isEmpty
+                              ? const Icon(LucideIcons.user, color: AppColors.cream, size: 26)
+                              : null,
                         ),
-                      ),
-                      // Rating
-                      Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment
-                                .end,
-                        children: [
-                          Row(
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(
-                                Icons.star,
-                                size: 14,
-                                color: Color(
-                                  0xFFC9A55A,
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 3,
-                              ),
-                              Text(
-                                shop.rating
-                                    .toStringAsFixed(
-                                      1,
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      shop.shopName,
+                                      style: AppTextStyles.displaySmall,
                                     ),
-                                style: const TextStyle(
-                                  color: Color(
-                                    0xFFF5EDE0,
                                   ),
-                                  fontSize: 14,
-                                  fontWeight:
-                                      FontWeight
-                                          .w600,
-                                ),
+                                  if (shop.isVerified) ...[
+                                    const SizedBox(width: 6),
+                                    const Tooltip(
+                                      message: 'Verified Kashmiri Artisan',
+                                      child: Icon(Icons.verified, size: 15, color: AppColors.saffron),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  const Icon(Icons.location_on_outlined, size: 12, color: AppColors.stone),
+                                  const SizedBox(width: 3),
+                                  Text(shop.location, style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic)),
+                                ],
                               ),
                             ],
                           ),
-                          Text(
-                            '${shop.totalReviews} reviews',
-                            style:
-                                const TextStyle(
-                                  color: Color(
-                                    0xFF8FA8A0,
-                                  ),
-                                  fontSize: 11,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.star, size: 14, color: AppColors.saffron),
+                                const SizedBox(width: 3),
+                                Text(shop.rating.toStringAsFixed(1),
+                                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                            Text('${shop.totalReviews} reviews', style: AppTextStyles.caption),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                ),
 
-                // ── Open/Closed Banner ──
+                // ── Open/Closed banner ───────────────────────────────────
                 Container(
                   width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(
-                        vertical: 8,
-                      ),
-                  color: shop.isOpen
-                      ? const Color(0xFFE8F5E9)
-                      : const Color(0xFFFFEBEE),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  color: AppColors.surface,
                   child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        shop.isOpen
-                            ? Icons.storefront
-                            : Icons
-                                  .store_mall_directory_outlined,
-                        size: 15,
-                        color: shop.isOpen
-                            ? Colors.green[700]
-                            : Colors.red[700],
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: shop.isOpen ? Colors.green : Colors.red,
+                        ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       Text(
-                        shop.isOpen
-                            ? 'This shop is currently open'
-                            : 'This shop is currently closed',
-                        style: TextStyle(
-                          color: shop.isOpen
-                              ? Colors.green[700]
-                              : Colors.red[700],
-                          fontSize: 13,
-                          fontWeight:
-                              FontWeight.w500,
+                        shop.isOpen ? 'This shop is currently open' : 'This shop is currently closed',
+                        style: AppTextStyles.caption.copyWith(
+                          color: shop.isOpen ? Colors.green[400] : Colors.red[400],
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                // ── Our Story ──
+                // ── Our Story ────────────────────────────────────────────
                 Padding(
-                  padding: const EdgeInsets.all(
-                    16,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Our Story',
-                        style: GoogleFonts.cormorantGaramond(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF3D2B1F),
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      Text('Our Story', style: AppTextStyles.displayMedium),
+                      const SizedBox(height: 10),
                       Container(
-                        padding:
-                            const EdgeInsets.all(
-                              14,
-                            ),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(
-                                12,
-                              ),
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
                           border: const Border(
-                            left: BorderSide(
-                              color: Color(
-                                0xFFC9A55A,
-                              ),
-                              width: 3,
-                            ),
+                            left: BorderSide(color: AppColors.terracotta, width: 3),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF3D2B1F,
-                              ).withValues(alpha:0.06),
-                              blurRadius: 10,
-                              offset:
-                                  const Offset(
-                                    0,
-                                    3,
-                                  ),
-                            ),
-                          ],
                         ),
                         child: Text(
                           shop.description,
-                          style: TextStyle(
-                            fontSize: 14,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.stone,
+                            fontStyle: FontStyle.italic,
                             height: 1.7,
-                            color:
-                                Colors.grey[700],
-                            fontStyle:
-                                FontStyle.italic,
                           ),
                         ),
                       ),
@@ -377,37 +226,23 @@ class _ShopDetailState extends State<ShopDetail> {
                   ),
                 ),
 
-                // ── Reviews Section ──
+                // ── Reviews ──────────────────────────────────────────────
                 _ReviewsSection(shopId: shop.id, isVerified: shop.isVerified),
 
-                // ── Products Header ──
+                // ── Products header ──────────────────────────────────────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    16,
-                    4,
-                    16,
-                    12,
-                  ),
-                  child: Text(
-                    'Products',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF3D2B1F),
-                      letterSpacing: 0.4,
-                    ),
-                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Text('Products', style: AppTextStyles.displayMedium),
                 ),
               ],
             ),
           ),
 
-          // ── Products Grid ──
+          // ── Products grid ────────────────────────────────────────────────
           FutureBuilder<List<ProductModel>>(
             future: _products,
             builder: (context, snapshot) {
-              if (snapshot.connectionState ==
-                  ConnectionState.waiting) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return SliverToBoxAdapter(
                   child: Center(
                     child: Lottie.asset(
@@ -418,19 +253,16 @@ class _ShopDetailState extends State<ShopDetail> {
                   ),
                 );
               }
-
-              if (!snapshot.hasData ||
-                  snapshot.data!.isEmpty) {
-                return const SliverToBoxAdapter(
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return SliverToBoxAdapter(
                   child: Center(
                     child: Padding(
-                      padding: EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(32),
                       child: Text(
                         'No products listed yet.',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontStyle:
-                              FontStyle.italic,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.stone,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ),
@@ -438,35 +270,22 @@ class _ShopDetailState extends State<ShopDetail> {
                 );
               }
 
-              final products = snapshot.data!;
-
               return SliverPadding(
-                padding:
-                    const EdgeInsets.fromLTRB(
-                      16,
-                      0,
-                      16,
-                      32,
-                    ),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                 sliver: SliverGrid(
-                  delegate:
-                      SliverChildBuilderDelegate(
-                        (context, index) =>
-                            _ProductCard(
-                              product:
-                                  products[index],
-                              shop: widget.shop,
-                            ),
-                        childCount:
-                            products.length,
-                      ),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _ProductCard(
+                      product: snapshot.data![index],
+                      shop: widget.shop,
+                    ),
+                    childCount: snapshot.data!.length,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.75,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
                 ),
               );
             },
@@ -478,117 +297,75 @@ class _ShopDetailState extends State<ShopDetail> {
 
   Widget _heroBg() {
     return Container(
-      color: const Color(0xFF3D2B1F),
-      child: Center(
-        child: Image.asset(
-          'assets/images/pinjra_window.png',
-          height: 120,
-          color: Colors.white24,
-        ),
+      color: AppColors.walnutDeep,
+      child: const Center(
+        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 40)),
       ),
     );
   }
 }
 
-// ── Product Card Widget ──
+// ── Product card ─────────────────────────────────────────────────────────────
+
 class _ProductCard extends StatelessWidget {
   final ProductModel product;
   final ShopModel shop;
-
-  const _ProductCard({
-    required this.product,
-    required this.shop,
-  });
+  const _ProductCard({required this.product, required this.shop});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          fadeSlideRoute(ProductDetail(
-            product: product,
-            shop: shop,
-          )),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        fadeSlideRoute(ProductDetail(product: product, shop: shop)),
+      ),
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(
-                0xFF3D2B1F,
-              ).withValues(alpha:0.07),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
+        decoration: AppDecorations.cardElevated,
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product image
             Expanded(
               child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
                 child: product.image.isNotEmpty
                     ? Image.network(
                         product.image,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) =>
-                                _imgFallback(),
+                        errorBuilder: (context, err, stack) => _imgFallback(),
                       )
                     : _imgFallback(),
               ),
             ),
-
-            // Product info
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     product.name,
                     maxLines: 2,
-                    overflow:
-                        TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF3D2B1F),
+                      color: AppColors.cream,
                       height: 1.3,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '₹${product.price.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.saffron,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFB5603A),
+                      fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  // Stock indicator
+                  const SizedBox(height: 2),
                   Text(
-                    product.stock > 0
-                        ? '${product.stock} in stock'
-                        : 'Out of stock',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: product.stock > 0
-                          ? Colors.green[600]
-                          : Colors.red[400],
+                    product.stock > 0 ? '${product.stock} in stock' : 'Out of stock',
+                    style: AppTextStyles.caption.copyWith(
+                      color: product.stock > 0 ? Colors.green[400] : Colors.red[400],
                     ),
                   ),
                 ],
@@ -602,19 +379,15 @@ class _ProductCard extends StatelessWidget {
 
   Widget _imgFallback() {
     return Container(
-      color: const Color(0xFFEDE0CC),
-      child: Center(
-        child: Image.asset(
-          'assets/images/wicker_basket.png',
-          height: 40,
-          color: const Color(0x333D2B1F),
-        ),
+      color: AppColors.surface,
+      child: const Center(
+        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 24)),
       ),
     );
   }
 }
 
-// ── Reviews Section ──────────────────────────────────────────────────────────
+// ── Reviews section ───────────────────────────────────────────────────────────
 
 class _ReviewsSection extends StatelessWidget {
   final String shopId;
@@ -630,37 +403,22 @@ class _ReviewsSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Customer Reviews',
-                style: GoogleFonts.cormorantGaramond(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3D2B1F),
-                  letterSpacing: 0.4,
-                ),
-              ),
+              Text('Customer Reviews', style: AppTextStyles.displayMedium),
               if (isVerified) ...[
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF8E7),
+                    border: Border.all(color: AppColors.saffron.withValues(alpha: 0.6)),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFC9A55A)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.verified, size: 12, color: Color(0xFFC9A55A)),
-                      SizedBox(width: 4),
-                      Text(
-                        'Verified Artisan',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFFC8821A),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      const Icon(Icons.verified, size: 11, color: AppColors.saffron),
+                      const SizedBox(width: 3),
+                      Text('Verified Artisan',
+                          style: AppTextStyles.caption.copyWith(color: AppColors.saffron)),
                     ],
                   ),
                 ),
@@ -679,11 +437,7 @@ class _ReviewsSection extends StatelessWidget {
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                 return Text(
                   'No reviews yet. Be the first to share your experience!',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[500],
-                    fontStyle: FontStyle.italic,
-                  ),
+                  style: AppTextStyles.bodySmall.copyWith(fontStyle: FontStyle.italic),
                 );
               }
               return Column(
@@ -696,55 +450,36 @@ class _ReviewsSection extends StatelessWidget {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3D2B1F).withValues(alpha: 0.05),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
+                    decoration: AppDecorations.card,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              userName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                                color: Color(0xFF3D2B1F),
-                              ),
-                            ),
-                            Text(
-                              '${date.day}/${date.month}/${date.year}',
-                              style: TextStyle(fontSize: 11, color: Colors.grey[400]),
-                            ),
+                            Text(userName,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                    fontWeight: FontWeight.w600, color: AppColors.cream)),
+                            Text('${date.day}/${date.month}/${date.year}',
+                                style: AppTextStyles.caption),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
-                          children: List.generate(5, (i) => Icon(
-                            i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                            size: 14,
-                            color: const Color(0xFFC9A55A),
-                          )),
+                          children: List.generate(
+                            5,
+                            (i) => Icon(
+                              i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                              size: 13,
+                              color: AppColors.saffron,
+                            ),
+                          ),
                         ),
                         if (comment.isNotEmpty) ...[
                           const SizedBox(height: 6),
-                          Text(
-                            comment,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[700],
-                              height: 1.5,
-                            ),
-                          ),
+                          Text(comment,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.stone, height: 1.5)),
                         ],
                       ],
                     ),

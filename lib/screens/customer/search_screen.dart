@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/product_model.dart';
 import '../../models/shop_model.dart';
 import '../../utils/transitions.dart';
+import '../../theme/app_theme.dart';
 import 'product_detail.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -15,12 +16,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _searchCtrl = TextEditingController();
   String _query = '';
-
-  // Filter state
   String _selectedCategory = 'all';
-  double _maxPrice = 50000;
   double _currentMaxPrice = 50000;
-
   List<_SearchResult> _results = [];
   bool _loading = false;
   bool _searched = false;
@@ -37,7 +34,6 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() { _query = q; _loading = true; _searched = true; _results = []; });
 
     try {
-      // Fetch all open shops (filtered by category if set)
       Query shopsQuery = FirebaseFirestore.instance
           .collection('shops')
           .where('isOpen', isEqualTo: true);
@@ -45,36 +41,27 @@ class _SearchScreenState extends State<SearchScreen> {
         shopsQuery = shopsQuery.where('categoryId', isEqualTo: _selectedCategory);
       }
       final shopsSnap = await shopsQuery.get();
-
       final results = <_SearchResult>[];
 
       for (final shopDoc in shopsSnap.docs) {
         final shop = ShopModel.fromMap(shopDoc.id, shopDoc.data() as Map<String, dynamic>);
         final productsSnap = await FirebaseFirestore.instance
-            .collection('shops')
-            .doc(shopDoc.id)
-            .collection('products')
-            .get();
-
+            .collection('shops').doc(shopDoc.id).collection('products').get();
         for (final pd in productsSnap.docs) {
           final product = ProductModel.fromMap(pd.id, pd.data());
           final nameMatch = product.name.toLowerCase().contains(q);
           final descMatch = product.description.toLowerCase().contains(q);
-          final priceMatch = product.price <= _currentMaxPrice;
-          if ((nameMatch || descMatch) && priceMatch) {
+          if ((nameMatch || descMatch) && product.price <= _currentMaxPrice) {
             results.add(_SearchResult(product: product, shop: shop));
           }
         }
       }
-
-      // Sort: name matches first, then by price ascending
       results.sort((a, b) {
         final aName = a.product.name.toLowerCase().contains(q) ? 0 : 1;
         final bName = b.product.name.toLowerCase().contains(q) ? 0 : 1;
         if (aName != bName) return aName.compareTo(bName);
         return a.product.price.compareTo(b.product.price);
       });
-
       setState(() { _results = results; _loading = false; });
     } catch (e) {
       setState(() => _loading = false);
@@ -84,23 +71,22 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5EDE0),
+      backgroundColor: AppColors.walnut,
       appBar: AppBar(
-        title: const Text('Search Products'),
+        title: const Text('Search'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
+          icon: const Icon(Icons.arrow_back_ios, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Column(
         children: [
-          // Search bar + filter strip
+          // ── Search bar + filters ─────────────────────────────────────
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            color: AppColors.walnutDeep,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
             child: Column(
               children: [
-                // Search input
                 Row(
                   children: [
                     Expanded(
@@ -108,17 +94,11 @@ class _SearchScreenState extends State<SearchScreen> {
                         controller: _searchCtrl,
                         autofocus: true,
                         onSubmitted: (_) => _search(),
+                        style: AppTextStyles.bodyMedium,
                         decoration: InputDecoration(
                           hintText: 'Search Pashmina, Papier Mache, Wood...',
-                          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-                          prefixIcon: const Icon(Icons.search, color: Color(0xFFC8821A)),
-                          filled: true,
-                          fillColor: const Color(0xFFF5EDE0),
+                          prefixIcon: const Icon(Icons.search, color: AppColors.terracotta, size: 20),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
                         ),
                       ),
                     ),
@@ -128,47 +108,57 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(13),
                         decoration: const BoxDecoration(
-                          color: Color(0xFF3D2B1F),
+                          color: AppColors.terracotta,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.search, color: Color(0xFFC9A55A), size: 20),
+                        child: const Icon(Icons.search, color: AppColors.cream, size: 20),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Category filter chips
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _FilterChip(label: 'All', value: 'all', selected: _selectedCategory == 'all',
+                      _FilterChip(label: 'All', selected: _selectedCategory == 'all',
                           onTap: () => setState(() => _selectedCategory = 'all')),
-                      _FilterChip(label: 'Pashmina', value: 'pashmina', selected: _selectedCategory == 'pashmina',
+                      _FilterChip(label: 'Pashmina', selected: _selectedCategory == 'pashmina',
                           onTap: () => setState(() => _selectedCategory = 'pashmina')),
-                      _FilterChip(label: 'Papier Mache', value: 'papier_mache', selected: _selectedCategory == 'papier_mache',
+                      _FilterChip(label: 'Papier Mache', selected: _selectedCategory == 'papier_mache',
                           onTap: () => setState(() => _selectedCategory = 'papier_mache')),
-                      _FilterChip(label: 'Walnut Wood', value: 'wood', selected: _selectedCategory == 'wood',
+                      _FilterChip(label: 'Walnut Wood', selected: _selectedCategory == 'wood',
                           onTap: () => setState(() => _selectedCategory = 'wood')),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                // Price filter
+                const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Text('Max Price:', style: TextStyle(fontSize: 12, color: Color(0xFF3D2B1F), fontWeight: FontWeight.w500)),
+                    Text('Max Price:', style: AppTextStyles.caption),
                     const SizedBox(width: 8),
-                    Text('₹${_currentMaxPrice.toInt()}', style: const TextStyle(fontSize: 12, color: Color(0xFFC8821A), fontWeight: FontWeight.w700)),
+                    Text(
+                      '₹${_currentMaxPrice.toInt()}',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.terracottaLight,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     Expanded(
-                      child: Slider(
-                        value: _currentMaxPrice,
-                        min: 500,
-                        max: 50000,
-                        divisions: 99,
-                        activeColor: const Color(0xFFC9A55A),
-                        inactiveColor: const Color(0xFFE0D0BC),
-                        onChanged: (v) => setState(() => _currentMaxPrice = v),
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: AppColors.terracotta,
+                          inactiveTrackColor: AppColors.surface,
+                          thumbColor: AppColors.terracottaLight,
+                          overlayColor: AppColors.terracotta.withValues(alpha: 0.2),
+                        ),
+                        child: Slider(
+                          value: _currentMaxPrice,
+                          min: 500,
+                          max: 50000,
+                          divisions: 99,
+                          onChanged: (v) => setState(() => _currentMaxPrice = v),
+                        ),
                       ),
                     ),
                   ],
@@ -177,12 +167,12 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
 
-          // Results
+          // ── Results ──────────────────────────────────────────────────
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFFC8821A)))
+                ? const Center(child: CircularProgressIndicator(color: AppColors.terracotta))
                 : !_searched
-                    ? _emptyState('Search for authentic Kashmiri handicrafts', Icons.search)
+                    ? _emptyState('Search for authentic\nKashmiri handicrafts', Icons.search_outlined)
                     : _results.isEmpty
                         ? _emptyState('No products found for "$_query"', Icons.find_in_page_outlined)
                         : ListView.builder(
@@ -202,10 +192,17 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 60, color: const Color(0xFFCCBBA0)),
+          Icon(icon, size: 52, color: AppColors.stone),
           const SizedBox(height: 16),
-          Text(msg, textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[500], fontStyle: FontStyle.italic, height: 1.5)),
+          Text(
+            msg,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.stone,
+              fontStyle: FontStyle.italic,
+              height: 1.6,
+            ),
+          ),
         ],
       ),
     );
@@ -214,10 +211,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
 class _FilterChip extends StatelessWidget {
   final String label;
-  final String value;
   final bool selected;
   final VoidCallback onTap;
-  const _FilterChip({required this.label, required this.value, required this.selected, required this.onTap});
+  const _FilterChip({required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -225,18 +221,19 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF3D2B1F) : const Color(0xFFF5EDE0),
+          color: selected ? AppColors.terracotta : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? const Color(0xFF3D2B1F) : const Color(0xFFCCBBA0)),
+          border: Border.all(
+            color: selected ? AppColors.terracotta : AppColors.border,
+          ),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
+          style: AppTextStyles.caption.copyWith(
+            color: selected ? AppColors.cream : AppColors.stone,
             fontWeight: FontWeight.w600,
-            color: selected ? const Color(0xFFF5EDE0) : const Color(0xFF3D2B1F),
           ),
         ),
       ),
@@ -262,20 +259,14 @@ class _SearchResultCard extends StatelessWidget {
       onTap: () => Navigator.push(context, fadeSlideRoute(ProductDetail(product: p, shop: s))),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(color: const Color(0xFF3D2B1F).withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, 2)),
-          ],
-        ),
+        decoration: AppDecorations.cardElevated,
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(14)),
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(11)),
               child: p.image.isNotEmpty
                   ? Image.network(p.image, width: 90, height: 90, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _fallback())
+                      errorBuilder: (context, err, stack) => _fallback())
                   : _fallback(),
             ),
             Expanded(
@@ -285,19 +276,22 @@ class _SearchResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(p.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF3D2B1F)),
+                        style: AppTextStyles.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600, color: AppColors.cream),
                         maxLines: 2, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 3),
                     Text(s.shopName,
-                        style: const TextStyle(fontSize: 11, color: Color(0xFF8FA8A0), fontStyle: FontStyle.italic)),
+                        style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic)),
                     const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('₹${p.price.toStringAsFixed(0)}',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFB5603A))),
+                            style: AppTextStyles.bodySmall.copyWith(
+                                fontWeight: FontWeight.w700, color: AppColors.saffron, fontSize: 15)),
                         Text(p.stock > 0 ? '${p.stock} in stock' : 'Out of stock',
-                            style: TextStyle(fontSize: 11, color: p.stock > 0 ? Colors.green[600] : Colors.red[400])),
+                            style: AppTextStyles.caption.copyWith(
+                                color: p.stock > 0 ? Colors.green[400] : Colors.red[400])),
                       ],
                     ),
                   ],
@@ -311,7 +305,7 @@ class _SearchResultCard extends StatelessWidget {
   }
 
   Widget _fallback() => Container(
-    width: 90, height: 90, color: const Color(0xFFEDE0CC),
-    child: Center(child: Image.asset('assets/images/wicker_basket.png', height: 36, color: const Color(0x333D2B1F))),
+    width: 90, height: 90, color: AppColors.surface,
+    child: const Center(child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 20))),
   );
 }

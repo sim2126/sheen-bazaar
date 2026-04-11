@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/auth/login_page.dart';
+import '../theme/app_theme.dart';
 
 /// Shows a bottom sheet prompting the guest to log in or sign up.
 /// Navigates to [LoginPage] with [returnAfterLogin] = true so the
@@ -7,48 +8,52 @@ import '../screens/auth/login_page.dart';
 Future<void> showLoginRequiredDialog(BuildContext context) async {
   await showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFFF5EDE0),
+    backgroundColor: AppColors.walnutDeep,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      side: BorderSide(color: AppColors.border),
     ),
     builder: (_) => Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Drag handle
           Container(
-            width: 40,
-            height: 4,
+            width: 40, height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFD4B896),
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 24),
-          const Text(
-            '🔒',
-            style: TextStyle(fontSize: 40),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Sign in to continue',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF3D2B1F),
+          const SizedBox(height: 28),
+
+          // Icon
+          Container(
+            width: 56, height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.cardBorder),
             ),
+            child: const Icon(Icons.lock_outline, color: AppColors.stone, size: 24),
           ),
+          const SizedBox(height: 16),
+
+          Text('Sign in to continue', style: AppTextStyles.displaySmall),
           const SizedBox(height: 8),
           Text(
             'You need an account to do that.\nIt only takes a minute to get started.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-              height: 1.5,
-            ),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.stone, height: 1.6),
           ),
-          const SizedBox(height: 28),
+
+          const SizedBox(height: 8),
+          Text('✦', style: AppTextStyles.caption),
+          const SizedBox(height: 20),
+
+          // Login CTA
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -57,26 +62,21 @@ Future<void> showLoginRequiredDialog(BuildContext context) async {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        const LoginPage(returnAfterLogin: true),
-                  ),
+                    builder: (_) => const LoginPage(returnAfterLogin: true)),
                 );
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                backgroundColor: const Color(0xFF3D2B1F),
+                backgroundColor: AppColors.terracotta,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
               ),
-              child: const Text(
-                'Login',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFFF5EDE0),
-                  letterSpacing: 0.5,
-                ),
-              ),
+              child: Text('Login', style: AppTextStyles.button),
             ),
           ),
           const SizedBox(height: 10),
+
+          // Register CTA
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -85,22 +85,20 @@ Future<void> showLoginRequiredDialog(BuildContext context) async {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const LoginPage(returnAfterLogin: true),
-                  ),
+                    builder: (_) => const LoginPage(
+                      returnAfterLogin: true,
+                      initialMode: LoginMode.register,
+                    )),
                 );
               },
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: Color(0xFF3D2B1F)),
+                side: const BorderSide(color: AppColors.border),
+                foregroundColor: AppColors.cream,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
               ),
-              child: const Text(
-                'Create Account',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF3D2B1F),
-                  letterSpacing: 0.5,
-                ),
-              ),
+              child: Text('Create Account', style: AppTextStyles.button),
             ),
           ),
         ],

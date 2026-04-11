@@ -1,1 +1,32 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"sheen-bazaar","appId":"1:56891092570:android:bae700ee62d48a82fff263","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"sheen-bazaar","configurations":{"android":"1:56891092570:android:bae700ee62d48a82fff263","web":"1:56891092570:web:7d64d52d5ff732f4fff263"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "sheen-bazaar",
+          "appId": "1:56891092570:android:bae700ee62d48a82fff263",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "sheen-bazaar",
+          "configurations": {
+            "android": "1:56891092570:android:bae700ee62d48a82fff263",
+            "web": "1:56891092570:web:7d64d52d5ff732f4fff263"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
+    }
+  ],
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  }
+}

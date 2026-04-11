@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../models/product_model.dart';
-import '../../services/claude_service.dart';
+import '../../services/gemini_service.dart';
 import '../../services/image_upload_service.dart';
 import '../../widgets/image_picker_field.dart';
 
@@ -636,13 +636,13 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
           'Use only what you actually see — not assumptions.\n\n'
           'Return the JSON object as specified.';
 
-      rawResponse = await ClaudeService.sendMessageWithImage(
+      rawResponse = await GeminiService.sendMessageWithImage(
         systemPrompt: systemPrompt,
         userText: userText,
         imageBytes: imageBytes,
       );
     } else {
-      rawResponse = await ClaudeService.sendMessage(
+      rawResponse = await GeminiService.sendMessage(
         systemPrompt: systemPrompt,
         messages: [
           {

@@ -3,15 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../splash_screen.dart';
+import '../../theme/app_theme.dart';
+import '../customer/customer_home.dart';
 import '../shop_owner/shop_dashboard.dart';
 import '../admin/admin_panel.dart';
 
 enum LoginMode { login, register }
 
 class LoginPage extends StatefulWidget {
-  /// When true the page pops back after successful auth instead of
-  /// replacing the stack. Used when a guest triggers a login-required action.
   final bool returnAfterLogin;
   final LoginMode initialMode;
   const LoginPage({
@@ -93,34 +92,25 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
 
-      // Always fetch role — non-customer roles go to their dashboard.
       final uid = FirebaseAuth.instance.currentUser!.uid;
       final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
+          .collection('users').doc(uid).get();
       final role = doc.data()?['role'];
 
       if (!mounted) return;
 
       if (role == 'admin') {
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const AdminPanel()),
-        );
+          context, MaterialPageRoute(builder: (_) => const AdminPanel()));
       } else if (role == 'shop_owner') {
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ShopDashboard()),
-        );
+          context, MaterialPageRoute(builder: (_) => const ShopDashboard()));
       } else {
         if (widget.returnAfterLogin) {
           Navigator.pop(context);
         } else {
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const SplashScreen()),
-          );
+            context, MaterialPageRoute(builder: (_) => const CustomerHome()));
         }
       }
     } on FirebaseAuthException catch (e) {
@@ -128,14 +118,20 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_friendlyError(e.code)),
-            backgroundColor: const Color(0xFFB5603A),
+            backgroundColor: AppColors.surface,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: const BorderSide(color: AppColors.terracotta),
+            ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.surface),
+        );
       }
     }
 
@@ -144,76 +140,72 @@ class _LoginPageState extends State<LoginPage> {
 
   String _friendlyError(String code) {
     switch (code) {
-      case 'user-not-found':
-        return 'No account found with this email.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'email-already-in-use':
-        return 'This email is already registered. Try logging in.';
-      case 'weak-password':
-        return 'Password must be at least 6 characters.';
-      case 'invalid-email':
-        return 'Please enter a valid email address.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
-      default:
-        return 'Something went wrong. Please try again.';
+      case 'user-not-found': return 'No account found with this email.';
+      case 'wrong-password': return 'Incorrect password. Please try again.';
+      case 'email-already-in-use': return 'This email is already registered. Try logging in.';
+      case 'weak-password': return 'Password must be at least 6 characters.';
+      case 'invalid-email': return 'Please enter a valid email address.';
+      case 'too-many-requests': return 'Too many attempts. Please try again later.';
+      default: return 'Something went wrong. Please try again.';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5EDE0),
+      backgroundColor: AppColors.walnut,
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 48),
 
-            // ── Brand header ──
+            // ── Brand header ───────────────────────────────────────────────
             Center(
               child: Column(
                 children: [
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: 72, height: 72,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3D2B1F),
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.cardBorder),
                     ),
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Image.asset(
                           'assets/images/chinar_leaf.png',
-                          color: const Color(0xFFF5EDE0),
+                          color: AppColors.terracottaLight,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                   Text(
                     'Sheen Bazaar',
                     style: GoogleFonts.cormorantGaramond(
                       fontSize: 32,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF3D2B1F),
-                      letterSpacing: 1,
+                      color: AppColors.cream,
+                      letterSpacing: 1.5,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text('✦', style: AppTextStyles.caption),
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
-            // ── Login / Register toggle ──
+            // ── Login / Register toggle ────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE0CC),
+                  color: AppColors.walnutDeep,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
@@ -226,7 +218,7 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 4),
 
-            // ── PageView of forms ──
+            // ── PageView of forms ──────────────────────────────────────────
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -242,8 +234,6 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-
-  // ── Login form page ──
 
   Widget _buildLoginForm() {
     return SingleChildScrollView(
@@ -271,19 +261,13 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 20),
             _submitButton(),
             const SizedBox(height: 12),
-            _switchHint(
-              prompt: "Don't have an account?",
-              label: 'Register',
-              toPage: 1,
-            ),
+            _switchHint(prompt: "Don't have an account?", label: 'Register', toPage: 1),
             const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
-
-  // ── Register form page ──
 
   Widget _buildRegisterForm() {
     return SingleChildScrollView(
@@ -348,11 +332,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             _submitButton(),
             const SizedBox(height: 12),
-            _switchHint(
-              prompt: 'Already have an account?',
-              label: 'Login',
-              toPage: 0,
-            ),
+            _switchHint(prompt: 'Already have an account?', label: 'Login', toPage: 0),
             const SizedBox(height: 32),
           ],
         ),
@@ -360,7 +340,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // ── Shared widgets ──
+  // ── Shared widgets ─────────────────────────────────────────────────────────
 
   Widget _submitButton() {
     return SizedBox(
@@ -369,19 +349,18 @@ class _LoginPageState extends State<LoginPage> {
         onPressed: _loading ? null : _submit,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: AppColors.terracotta,
+          disabledBackgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
         child: _loading
             ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
+                height: 20, width: 20,
+                child: CircularProgressIndicator(color: AppColors.cream, strokeWidth: 2),
               )
             : Text(
                 _isLogin ? 'Login' : 'Create Account',
-                style: const TextStyle(fontSize: 16, letterSpacing: 0.5),
+                style: AppTextStyles.button.copyWith(fontSize: 16),
               ),
       ),
     );
@@ -397,7 +376,7 @@ class _LoginPageState extends State<LoginPage> {
         onPressed: () => _goToPage(toPage),
         child: Text(
           '$prompt $label',
-          style: const TextStyle(color: Color(0xFFB5603A), fontSize: 13),
+          style: AppTextStyles.caption.copyWith(color: AppColors.terracottaLight),
         ),
       ),
     );
@@ -412,16 +391,15 @@ class _LoginPageState extends State<LoginPage> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: active ? const Color(0xFF3D2B1F) : Colors.transparent,
+            color: active ? AppColors.terracotta : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: active ? const Color(0xFFF5EDE0) : Colors.grey[600],
+            style: AppTextStyles.bodySmall.copyWith(
+              color: active ? AppColors.cream : AppColors.stone,
               fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              fontSize: 14,
             ),
           ),
         ),
@@ -442,12 +420,10 @@ class _LoginPageState extends State<LoginPage> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF3D2B1F) : Colors.white,
+            color: selected ? AppColors.terracotta : AppColors.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected
-                  ? const Color(0xFF3D2B1F)
-                  : const Color(0xFFEDE0CC),
+              color: selected ? AppColors.terracotta : AppColors.border,
               width: 1.5,
             ),
           ),
@@ -456,9 +432,7 @@ class _LoginPageState extends State<LoginPage> {
               Theme(
                 data: ThemeData(
                   iconTheme: IconThemeData(
-                    color: selected
-                        ? const Color(0xFFF5EDE0)
-                        : const Color(0xFF3D2B1F),
+                    color: selected ? AppColors.cream : AppColors.stoneLight,
                   ),
                 ),
                 child: icon,
@@ -467,12 +441,10 @@ class _LoginPageState extends State<LoginPage> {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
+                style: AppTextStyles.caption.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: selected
-                      ? const Color(0xFFF5EDE0)
-                      : const Color(0xFF3D2B1F),
+                  color: selected ? AppColors.cream : AppColors.stoneLight,
+                  fontSize: 11,
                 ),
               ),
             ],
@@ -487,10 +459,9 @@ class _LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.only(bottom: 6, top: 4),
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 13,
+        style: AppTextStyles.caption.copyWith(
           fontWeight: FontWeight.w600,
-          color: Color(0xFF3D2B1F),
+          color: AppColors.stoneLight,
           letterSpacing: 0.3,
         ),
       ),
@@ -503,33 +474,37 @@ class _LoginPageState extends State<LoginPage> {
       child: TextFormField(
         controller: _passCtrl,
         obscureText: _obscurePass,
+        style: AppTextStyles.bodySmall.copyWith(color: AppColors.cream),
         validator: (v) {
           if (v!.isEmpty) return 'Password is required';
-          if (!_isLogin && v.length < 6) {
-            return 'Password must be at least 6 characters';
-          }
+          if (!_isLogin && v.length < 6) return 'Password must be at least 6 characters';
           return null;
         },
         decoration: InputDecoration(
           hintText: '••••••••',
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-          prefixIcon: const Icon(
-            Icons.lock_outline,
-            color: Color(0xFF3D2B1F),
-            size: 20,
-          ),
+          hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.stone),
+          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.stone, size: 20),
           suffixIcon: IconButton(
             icon: Icon(
-              _obscurePass
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-              color: Colors.grey,
-              size: 20,
+              _obscurePass ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              color: AppColors.stone, size: 20,
             ),
             onPressed: () => setState(() => _obscurePass = !_obscurePass),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.terracotta),
+          ),
         ),
       ),
     );
@@ -548,12 +523,25 @@ class _LoginPageState extends State<LoginPage> {
         controller: controller,
         keyboardType: keyboardType,
         validator: validator,
+        style: AppTextStyles.bodySmall.copyWith(color: AppColors.cream),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-          prefixIcon: Icon(icon, color: const Color(0xFF3D2B1F), size: 20),
+          hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.stone),
+          prefixIcon: Icon(icon, color: AppColors.stone, size: 20),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.terracotta),
+          ),
         ),
       ),
     );
