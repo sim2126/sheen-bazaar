@@ -111,7 +111,7 @@ class AdminUsers extends StatelessWidget {
                             data['name'] ?? 'No name',
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: 16,
                               color: Color(0xFF3D2B1F),
                             ),
                           ),
@@ -119,7 +119,7 @@ class AdminUsers extends StatelessWidget {
                           Text(
                             data['email'] ?? '',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               color: Colors.grey[500],
                             ),
                           ),
@@ -128,16 +128,16 @@ class AdminUsers extends StatelessWidget {
                                   .toString()
                                   .isNotEmpty)
                             Text(
-                              data['phone'],
+                              data['phone'].toString(),
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 14,
                                 color: Colors.grey[500],
                               ),
                             ),
                           Text(
                             'Joined: ${createdAt.day}/${createdAt.month}/${createdAt.year}',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               color: Colors.grey[400],
                             ),
                           ),
@@ -165,7 +165,7 @@ class AdminUsers extends StatelessWidget {
                             : role[0].toUpperCase() +
                                 role.substring(1),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: _roleColor(role),
                         ),

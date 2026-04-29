@@ -3,12 +3,63 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../auth/login_page.dart';
+import '../../services/category_seeder.dart';
 import 'admin_shops.dart';
 import 'admin_orders.dart';
 import 'admin_users.dart';
 
-class AdminPanel extends StatelessWidget {
+class AdminPanel extends StatefulWidget {
   const AdminPanel({super.key});
+
+  @override
+  State<AdminPanel> createState() => _AdminPanelState();
+}
+
+class _AdminPanelState extends State<AdminPanel> {
+  bool _seeding = false;
+
+  Future<void> _seedCategories() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Seed Categories'),
+        content: const Text(
+          'This will DELETE all existing categories and write the 14 canonical Kashmiri handicraft categories. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Seed', style: TextStyle(color: Colors.red[700])),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _seeding = true);
+    try {
+      final count = await CategorySeeder.seed();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$count categories seeded successfully.'),
+            backgroundColor: const Color(0xFF3D2B1F),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error seeding: $e')),
+        );
+      }
+    }
+    if (mounted) setState(() => _seeding = false);
+  }
 
   Future<void> _logout(
     BuildContext context,
@@ -28,6 +79,7 @@ class AdminPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       backgroundColor: const Color(0xFFF5EDE0),
       appBar: AppBar(
         title: const Text('Admin Panel'),
@@ -64,7 +116,7 @@ class AdminPanel extends StatelessWidget {
                     'Welcome, Admin',
                     style: TextStyle(
                       color: Color(0xFFF5EDE0),
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -73,7 +125,7 @@ class AdminPanel extends StatelessWidget {
                     'Manage the Sheen Bazaar marketplace',
                     style: TextStyle(
                       color: Color(0xFF8FA8A0),
-                      fontSize: 13,
+                      fontSize: 15,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -166,6 +218,29 @@ class AdminPanel extends StatelessWidget {
                 ),
               ),
             ),
+
+            const SizedBox(height: 24),
+
+            const _SectionLabel(label: 'Data'),
+            const SizedBox(height: 12),
+
+            _seeding
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF3D2B1F),
+                      ),
+                    ),
+                  )
+                : _ActionTile(
+                    icon: Icons.category_outlined,
+                    title: 'Seed Categories',
+                    subtitle:
+                        'Replace all categories with the 14 Kashmiri handicraft categories',
+                    onTap: _seedCategories,
+                  ),
+
           ],
         ),
       ),
@@ -184,7 +259,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: const TextStyle(
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: FontWeight.w600,
         color: Color(0xFF3D2B1F),
         letterSpacing: 0.3,
@@ -238,7 +313,7 @@ class _StatCard extends StatelessWidget {
                 return Text(
                   '$count',
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF3D2B1F),
                   ),
@@ -249,7 +324,7 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 13,
                 color: Colors.grey,
               ),
             ),
@@ -317,7 +392,7 @@ class _ActionTile extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF3D2B1F),
                     ),
@@ -326,7 +401,7 @@ class _ActionTile extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       color: Colors.grey[500],
                     ),
                   ),

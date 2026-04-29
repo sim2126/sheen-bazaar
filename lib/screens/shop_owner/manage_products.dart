@@ -156,7 +156,7 @@ class _ManageProductsState extends State<ManageProducts> {
                           Text(
                             'Stock: ${p.stock}',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               color: p.stock == 0
                                   ? Colors.red[400]
                                   : p.stock <= 3
@@ -276,7 +276,9 @@ class _AddEditProductState extends State<AddEditProduct> {
   XFile? _imageFile;
   ProductDetails? _generatedDetails;
 
-  String _categoryId = 'pashmina';
+  String? _categoryId;
+  List<Map<String, String>> _categories = [];
+  bool _categoriesLoading = true;
   bool _loading = false;
   bool get _isEditing => widget.existingProduct != null;
 
@@ -291,6 +293,26 @@ class _AddEditProductState extends State<AddEditProduct> {
       _stockCtrl.text = p.stock.toString();
       _categoryId = p.categoryId;
     }
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final snap = await FirebaseFirestore.instance
+        .collection('categories')
+        .get();
+    final cats = snap.docs
+        .map((d) => {'id': d.id, 'name': d.data()['name'] as String})
+        .toList()
+      ..sort((a, b) => a['name']!.compareTo(b['name']!));
+    if (!mounted) return;
+    setState(() {
+      _categories = cats;
+      _categoriesLoading = false;
+      if (_categoryId == null ||
+          !cats.any((c) => c['id'] == _categoryId)) {
+        _categoryId = cats.isNotEmpty ? cats.first['id'] : null;
+      }
+    });
   }
 
   @override
@@ -304,6 +326,7 @@ class _AddEditProductState extends State<AddEditProduct> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_categoryId == null) return;
     setState(() => _loading = true);
 
     try {
@@ -411,7 +434,11 @@ class _AddEditProductState extends State<AddEditProduct> {
                         _generatedDetails = details;
                       }),
                       getProductName: () => _nameCtrl.text.trim(),
-                      getCategoryId: () => _categoryId,
+                      getCategoryName: () => _categories
+                          .firstWhere(
+                            (c) => c['id'] == _categoryId,
+                            orElse: () => {'name': 'Kashmiri Handicraft'},
+                          )['name']!,
                       getImageFile: () => _imageFile,
                     ),
                   ),
@@ -469,27 +496,39 @@ class _AddEditProductState extends State<AddEditProduct> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: const Color(0xFF3D2B1F)),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _categoryId,
-                    isExpanded: true,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'pashmina',
-                        child: Text('Pashmina'),
+                child: _categoriesLoading
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Center(
+                          child: SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF3D2B1F),
+                            ),
+                          ),
+                        ),
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _categoryId,
+                          isExpanded: true,
+                          dropdownColor: Colors.white,
+                          style: const TextStyle(
+                            color: Color(0xFF3D2B1F),
+                            fontSize: 15,
+                          ),
+                          iconEnabledColor: const Color(0xFF3D2B1F),
+                          items: _categories
+                              .map((c) => DropdownMenuItem(
+                                    value: c['id'],
+                                    child: Text(c['name']!),
+                                  ))
+                              .toList(),
+                          onChanged: (v) => setState(() => _categoryId = v),
+                        ),
                       ),
-                      DropdownMenuItem(
-                        value: 'papier_mache',
-                        child: Text('Papier Mache'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'wood',
-                        child: Text('Walnut Wood'),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _categoryId = v!),
-                  ),
-                ),
               ),
 
               SizedBox(
@@ -510,7 +549,7 @@ class _AddEditProductState extends State<AddEditProduct> {
                         )
                       : Text(
                           _isEditing ? 'Save Changes' : 'Add Product',
-                          style: const TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 18),
                         ),
                 ),
               ),
@@ -527,7 +566,7 @@ class _AddEditProductState extends State<AddEditProduct> {
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 13,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
           color: Color(0xFF3D2B1F),
           letterSpacing: 0.3,
@@ -550,9 +589,10 @@ class _AddEditProductState extends State<AddEditProduct> {
         maxLines: maxLines,
         keyboardType: keyboardType,
         validator: validator,
+        style: const TextStyle(color: Color(0xFF3D2B1F), fontSize: 15),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
           filled: true,
           fillColor: Colors.white,
         ),
@@ -564,13 +604,13 @@ class _AddEditProductState extends State<AddEditProduct> {
 class _AiGenerateButton extends StatefulWidget {
   final Function(String description, ProductDetails? details) onGenerated;
   final String Function() getProductName;
-  final String Function() getCategoryId;
+  final String Function() getCategoryName;
   final XFile? Function() getImageFile;
 
   const _AiGenerateButton({
     required this.onGenerated,
     required this.getProductName,
-    required this.getCategoryId,
+    required this.getCategoryName,
     required this.getImageFile,
   });
 
@@ -595,15 +635,13 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
 
     setState(() => _loading = true);
 
-    final category = widget.getCategoryId();
-    final categoryName = category == 'pashmina'
-        ? 'Pashmina'
-        : category == 'papier_mache'
-            ? 'Papier Mache'
-            : 'Walnut Wood';
+    final categoryName = widget.getCategoryName();
 
     const systemPrompt =
         'You are a product listing specialist for a premium Kashmiri handicrafts marketplace.\n\n'
+        'analyze the product image\n'
+        'analyze the product name\n'
+        'analyze the product category\n\n'
         'Output ONLY a valid JSON object — no markdown, no explanation, no code fences.\n\n'
         'JSON schema (all fields are strings, omit a field only if truly unknown):\n'
         '{\n'
@@ -620,7 +658,8 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
         '- Be specific to THIS product — not generic Kashmiri craft facts\n'
         '- Lead with the unique technique or material\n'
         '- Describe what is actually visible: color, weave, embroidery, motifs, finish\n'
-        '- Plain text — no bullet points, markdown, or asterisks inside any field';
+        '- Plain text — no bullet points, markdown, or asterisks inside any field\n'
+        'Use only what you actually see — not assumptions.';
 
     final imageFile = widget.getImageFile();
     String rawResponse;
@@ -628,11 +667,9 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
     if (imageFile != null) {
       final imageBytes = await imageFile.readAsBytes();
       final userText =
-          'Analyze this product image carefully.\n\n'
           'Product name: "$name"\n'
-          'Category: $categoryName Kashmiri handicraft\n\n'
-          'From the image, identify: exact color(s), pattern type, texture/weave/finish, '
-          'any embroidery or decorative motifs, and overall form. '
+          'Category: $categoryName\n\n'
+          'Analyze the product image, the product name, and the product category. '
           'Use only what you actually see — not assumptions.\n\n'
           'Return the JSON object as specified.';
 
@@ -648,7 +685,7 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
           {
             'role': 'user',
             'content':
-                'Product name: "$name". Category: $categoryName Kashmiri handicraft. '
+                'Product name: "$name". Category: $categoryName. '
                 'No image is available. Use your knowledge of this craft type to fill '
                 'in as much detail as possible. Return the JSON object as specified.',
           },

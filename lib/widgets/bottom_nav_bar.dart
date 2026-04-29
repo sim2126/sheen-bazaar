@@ -133,7 +133,7 @@ class _NavItem extends StatelessWidget {
                           badge! > 9 ? '9+' : '$badge',
                           style: const TextStyle(
                             color: AppColors.cream,
-                            fontSize: 9,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -146,7 +146,7 @@ class _NavItem extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 color: color,
                 letterSpacing: 0.3,

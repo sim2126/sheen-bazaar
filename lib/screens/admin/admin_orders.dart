@@ -115,7 +115,7 @@ class AdminOrders extends StatelessWidget {
                           style: const TextStyle(
                             fontWeight:
                                 FontWeight.w700,
-                            fontSize: 13,
+                            fontSize: 15,
                             color: Color(
                               0xFF3D2B1F,
                             ),
@@ -146,7 +146,7 @@ class AdminOrders extends StatelessWidget {
                               color: _statusColor(
                                 status,
                               ),
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight:
                                   FontWeight.w600,
                             ),
@@ -161,21 +161,21 @@ class AdminOrders extends StatelessWidget {
                     Text(
                       'User: ${data['userId'] ?? ''}',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         color: Colors.grey[500],
                       ),
                     ),
                     Text(
                       'Shop: ${data['shopId'] ?? ''}',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         color: Colors.grey[500],
                       ),
                     ),
                     Text(
                       'Date: ${createdAt.day}/${createdAt.month}/${createdAt.year}',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         color: Colors.grey[500],
                       ),
                     ),
@@ -208,7 +208,7 @@ class AdminOrders extends StatelessWidget {
                               '₹${item['price']}',
                               style:
                                   const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontWeight:
                                         FontWeight
                                             .w600,
@@ -245,7 +245,7 @@ class AdminOrders extends StatelessWidget {
                           style: const TextStyle(
                             fontWeight:
                                 FontWeight.w700,
-                            fontSize: 15,
+                            fontSize: 17,
                             color: Color(
                               0xFFB5603A,
                             ),

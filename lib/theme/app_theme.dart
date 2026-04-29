@@ -61,91 +61,91 @@ class AppColors {
 class AppTextStyles {
   AppTextStyles._();
 
-  // ── Display (Cormorant Garamond — serif, elegant) ────────────────────────────
-  static TextStyle displayHero = GoogleFonts.cormorantGaramond(
-    fontSize: 48,
-    fontWeight: FontWeight.w600,
+  // ── Display (Playfair Display — serif, elegant) ───────────────────────────────
+  static TextStyle displayHero = GoogleFonts.playfairDisplay(
+    fontSize: 50,
+    fontWeight: FontWeight.w500,
     color: AppColors.cream,
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
     height: 1.1,
   );
 
-  static TextStyle displayLarge = GoogleFonts.cormorantGaramond(
-    fontSize: 36,
-    fontWeight: FontWeight.w600,
+  static TextStyle displayLarge = GoogleFonts.playfairDisplay(
+    fontSize: 38,
+    fontWeight: FontWeight.w500,
     color: AppColors.cream,
-    letterSpacing: 1.2,
+    letterSpacing: 1.0,
   );
 
-  static TextStyle displayMedium = GoogleFonts.cormorantGaramond(
-    fontSize: 26,
-    fontWeight: FontWeight.w600,
+  static TextStyle displayMedium = GoogleFonts.playfairDisplay(
+    fontSize: 28,
+    fontWeight: FontWeight.w500,
     color: AppColors.cream,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   );
 
-  static TextStyle displaySmall = GoogleFonts.cormorantGaramond(
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
-    color: AppColors.cream,
-    letterSpacing: 0.5,
-  );
-
-  static TextStyle appBarTitle = GoogleFonts.cormorantGaramond(
+  static TextStyle displaySmall = GoogleFonts.playfairDisplay(
     fontSize: 22,
     fontWeight: FontWeight.w500,
     color: AppColors.cream,
-    letterSpacing: 2.0,
+    letterSpacing: 0.3,
   );
 
-  // ── Body (Raleway — clean sans-serif) ────────────────────────────────────────
-  static TextStyle bodyLarge = GoogleFonts.raleway(
-    fontSize: 16,
+  static TextStyle appBarTitle = GoogleFonts.playfairDisplay(
+    fontSize: 24,
+    fontWeight: FontWeight.w500,
+    color: AppColors.cream,
+    letterSpacing: 1.8,
+  );
+
+  // ── Body (Nunito — rounded sans-serif) ───────────────────────────────────────
+  static TextStyle bodyLarge = GoogleFonts.nunito(
+    fontSize: 18,
     fontWeight: FontWeight.w400,
     color: AppColors.cream,
     height: 1.6,
   );
 
-  static TextStyle bodyMedium = GoogleFonts.raleway(
-    fontSize: 14,
+  static TextStyle bodyMedium = GoogleFonts.nunito(
+    fontSize: 16,
     fontWeight: FontWeight.w400,
     color: AppColors.cream,
     height: 1.5,
   );
 
-  static TextStyle bodySmall = GoogleFonts.raleway(
-    fontSize: 12,
+  static TextStyle bodySmall = GoogleFonts.nunito(
+    fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.stone,
     height: 1.4,
   );
 
-  static TextStyle label = GoogleFonts.raleway(
-    fontSize: 11,
+  static TextStyle label = GoogleFonts.nunito(
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.stone,
     letterSpacing: 1.2,
   );
 
-  static TextStyle caption = GoogleFonts.raleway(
-    fontSize: 11,
+  static TextStyle caption = GoogleFonts.nunito(
+    fontSize: 13,
     fontWeight: FontWeight.w400,
     color: AppColors.stone,
     letterSpacing: 0.3,
   );
 
-  static TextStyle button = GoogleFonts.raleway(
-    fontSize: 14,
+  static TextStyle button = GoogleFonts.nunito(
+    fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.cream,
     letterSpacing: 0.8,
   );
 
-  static TextStyle price = GoogleFonts.cormorantGaramond(
-    fontSize: 24,
+  static TextStyle price = GoogleFonts.playfairDisplay(
+    fontSize: 26,
     fontWeight: FontWeight.w600,
     color: AppColors.saffron,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   );
 }
 

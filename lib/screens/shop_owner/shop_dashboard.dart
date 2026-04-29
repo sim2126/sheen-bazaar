@@ -118,7 +118,7 @@ class _ShopDashboardState
             const Text(
               'You don\'t have a shop yet',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF3D2B1F),
               ),
@@ -128,7 +128,7 @@ class _ShopDashboardState
               'The artisan is resting.\nCreate your shop to open your windows to the bazaar.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 color: Colors.grey[600],
                 fontStyle: FontStyle.italic,
                 height: 1.5,
@@ -238,7 +238,7 @@ class _ShopDashboardState
                                   color: Color(
                                     0xFFF5EDE0,
                                   ),
-                                  fontSize: 17,
+                                  fontSize: 19,
                                   fontWeight:
                                       FontWeight
                                           .w700,
@@ -327,7 +327,7 @@ class _ShopDashboardState
                                         0xFFC9A55A,
                                       )
                                     : Colors.grey,
-                                fontSize: 11,
+                                fontSize: 13,
                               ),
                             ),
                           ],
@@ -461,7 +461,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: const TextStyle(
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: FontWeight.w600,
         color: Color(0xFF3D2B1F),
         letterSpacing: 0.3,
@@ -510,7 +510,7 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 17,
               fontWeight: FontWeight.w700,
               color:
                   valueColor ??
@@ -521,7 +521,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 13,
               color: Colors.grey,
             ),
           ),
@@ -588,7 +588,7 @@ class _ActionTile extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF3D2B1F),
                     ),
@@ -597,7 +597,7 @@ class _ActionTile extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       color: Colors.grey[500],
                     ),
                   ),

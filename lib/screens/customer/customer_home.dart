@@ -275,11 +275,18 @@ class _CustomerHomeState extends State<CustomerHome>
                               _titleAnim,
                               Text(
                                 'Sheen Bazaar',
-                                style: GoogleFonts.cormorantGaramond(
-                                  fontSize: 42,
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 44,
                                   fontWeight: FontWeight.w500,
                                   color: AppColors.cream,
-                                  letterSpacing: 2.0,
+                                  letterSpacing: 1.6,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                      blurRadius: 12,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -302,9 +309,16 @@ class _CustomerHomeState extends State<CustomerHome>
                               Text(
                                 'Kashmiri Crafts · Artisan Stories',
                                 style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.stoneLight,
+                                  color: AppColors.cream,
                                   fontStyle: FontStyle.italic,
                                   letterSpacing: 1.2,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.75),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -332,12 +346,20 @@ class _CustomerHomeState extends State<CustomerHome>
                                 Text(
                                   'Explore Crafts',
                                   textAlign: TextAlign.center,
-                                  style: AppTextStyles.caption,
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.stoneLight,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withValues(alpha: 0.8),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 const Icon(
                                   Icons.keyboard_arrow_down_rounded,
-                                  color: AppColors.stone,
+                                  color: AppColors.stoneLight,
                                   size: 26,
                                 ),
                               ],
@@ -393,12 +415,13 @@ class _CustomerHomeState extends State<CustomerHome>
                 )
               else
                 SliverPadding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.only(top: 4, bottom: 4),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          _CategoryCard(category: categories[index]),
+                      (context, index) => _CategoryCard(
+                        category: categories[index],
+                        index: index,
+                      ),
                       childCount: categories.length,
                     ),
                   ),
@@ -413,51 +436,82 @@ class _CustomerHomeState extends State<CustomerHome>
   }
 }
 
-// ── Animated category card ────────────────────────────────────────────────────
+// ── Animated category card (editorial style) ─────────────────────────────────
 
 class _CategoryCard extends StatefulWidget {
   final CategoryModel category;
-  const _CategoryCard({required this.category});
+  final int index;
+  const _CategoryCard({required this.category, required this.index});
 
   @override
   State<_CategoryCard> createState() => _CategoryCardState();
 }
 
 class _CategoryCardState extends State<_CategoryCard>
-    with TickerProviderStateMixin {
-  late AnimationController _imgCtrl;
-  late AnimationController _txtCtrl;
-  late Animation<double> _imgAnim;
-  late Animation<double> _txtAnim;
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _txtFadeAnim;
+  late Animation<Offset> _txtSlideAnim;
 
   @override
   void initState() {
     super.initState();
 
-    _imgCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800))
-      ..forward();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
 
-    _txtCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
+    _fadeAnim = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.18),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.0, 0.75, curve: Curves.easeOut),
+    ));
+    _scaleAnim = Tween<double>(begin: 0.90, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.70, curve: Curves.easeOut),
+      ),
+    );
+    _txtFadeAnim = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.40, 1.0, curve: Curves.easeOut),
+    );
+    _txtSlideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.40, 1.0, curve: Curves.easeOut),
+    ));
 
-    _imgAnim = CurvedAnimation(parent: _imgCtrl, curve: _kCurve);
-    _txtAnim = CurvedAnimation(parent: _txtCtrl, curve: _kCurve);
-
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (mounted) _txtCtrl.forward();
+    // Staggered entrance: later cards wait longer, capped at 480 ms
+    final staggerDelay =
+        Duration(milliseconds: (widget.index * 140).clamp(0, 480));
+    Future.delayed(staggerDelay, () {
+      if (mounted) _ctrl.forward();
     });
   }
 
   @override
   void dispose() {
-    _imgCtrl.dispose();
-    _txtCtrl.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenW = MediaQuery.sizeOf(context).width;
+
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -466,103 +520,106 @@ class _CategoryCardState extends State<_CategoryCard>
           categoryName: widget.category.name,
         )),
       ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        decoration: BoxDecoration(
-          color: AppColors.walnutDeep,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.cardBorder),
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image fades + zooms in
-            FadeTransition(
-              opacity: _imgAnim,
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 0.88, end: 1.0).animate(_imgAnim),
-                child: SizedBox(
-                  height: 220,
-                  width: double.infinity,
-                  child: widget.category.image.isNotEmpty
-                      ? Image.network(
-                          widget.category.image,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, err, stack) =>
-                              _imgPlaceholder(),
-                        )
-                      : _imgPlaceholder(),
+      child: SlideTransition(
+        position: _slideAnim,
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 52),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Full-width image ─────────────────────────────────────────
+                ScaleTransition(
+                  scale: _scaleAnim,
+                  child: SizedBox(
+                    height: screenW,
+                    width: double.infinity,
+                    child: widget.category.image.isNotEmpty
+                        ? _categoryImage(widget.category.image, screenW)
+                        : _placeholder(screenW),
+                  ),
                 ),
-              ),
-            ),
 
-            // Text fades in 700 ms after image
-            FadeTransition(
-              opacity: _txtAnim,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppColors.terracotta,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(widget.category.name,
-                            style: AppTextStyles.displaySmall),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 14),
-                      child: Text(
-                        widget.category.description,
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.stone, height: 1.55),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 14),
-                      child: Row(
+                const SizedBox(height: 30),
+
+                // ── Text section slides up after image ───────────────────────
+                SlideTransition(
+                  position: _txtSlideAnim,
+                  child: FadeTransition(
+                    opacity: _txtFadeAnim,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Explore',
-                            style: AppTextStyles.caption.copyWith(
-                                color: AppColors.terracottaLight,
-                                letterSpacing: 0.8),
+                        Text(
+                          widget.category.name,
+                          style: AppTextStyles.displayMedium,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          widget.category.description,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.stone,
+                            height: 1.75,
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.arrow_forward,
-                              size: 12, color: AppColors.terracottaLight),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Text(
+                              'Explore Collection',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.terracottaLight,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.arrow_forward,
+                              size: 13,
+                              color: AppColors.terracottaLight,
+                            ),
+                          ],
+                        ),
+                      ],
+                      ),   // Column
+                    ),     // Padding
+                  ),       // FadeTransition
+                ),         // SlideTransition
+
+                const SizedBox(height: 48),
+
+                // ── Thin gold separator ──────────────────────────────────────
+                Container(height: 1, color: AppColors.border),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _imgPlaceholder() => Container(
+  Widget _categoryImage(String url, double size) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(url, fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _placeholder(size));
+    }
+    return Image.network(url, fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _placeholder(size));
+  }
+
+  Widget _placeholder(double size) => Container(
         color: AppColors.surface,
         child: const Center(
-          child: Text('✦',
-              style: TextStyle(color: AppColors.stone, fontSize: 28)),
+          child: Text(
+            '✦',
+            style: TextStyle(color: AppColors.stone, fontSize: 34),
+          ),
         ),
       );
 }
+

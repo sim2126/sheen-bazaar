@@ -9,9 +9,11 @@ class CategoryService {
   getCategories() async {
     final snapshot = await _db
         .collection('categories')
+        .orderBy('sortOrder')
         .get();
 
     return snapshot.docs
+        .where((doc) => doc.id != 'sculptures')
         .map(
           (doc) => CategoryModel.fromMap(
             doc.id,

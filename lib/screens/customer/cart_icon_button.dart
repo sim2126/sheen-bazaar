@@ -32,7 +32,7 @@ class CartIconButton extends StatelessWidget {
                 child: Text(
                   '$count',
                   style: const TextStyle(
-                    fontSize: 9,
+                    fontSize: 11,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),

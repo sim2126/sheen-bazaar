@@ -183,11 +183,11 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
                   Text(
                     'Sheen Bazaar',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w600,
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.cream,
-                      letterSpacing: 1.5,
+                      letterSpacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -360,7 +360,7 @@ class _LoginPageState extends State<LoginPage> {
               )
             : Text(
                 _isLogin ? 'Login' : 'Create Account',
-                style: AppTextStyles.button.copyWith(fontSize: 16),
+                style: AppTextStyles.button.copyWith(fontSize: 18),
               ),
       ),
     );
@@ -444,7 +444,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: AppTextStyles.caption.copyWith(
                   fontWeight: FontWeight.w600,
                   color: selected ? AppColors.cream : AppColors.stoneLight,
-                  fontSize: 11,
+                  fontSize: 13,
                 ),
               ),
             ],

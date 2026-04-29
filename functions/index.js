@@ -28,7 +28,7 @@ admin.initializeApp();
 //   firebase functions:secrets:set GEMINI_KEY
 const GEMINI_KEY = defineSecret('GEMINI_KEY');
 
-const MODEL_ID = 'gemini-1.5-flash-001';
+const MODEL_ID = 'gemini-2.5-flash';
 
 // ── Static system instruction ────────────────────────────────────────────────
 const ASSISTANT_SYSTEM_INSTRUCTION =
@@ -186,6 +186,69 @@ exports.geminiChat = functions
     }
   });
 
+// ── seedCategories ────────────────────────────────────────────────────────────
+const _SEED_DESCRIPTION =
+  'Lorem ipsum dolor sit amet consectetur adipiscing elit. sed do eiusmod ' +
+  'tempor incididunt ut labore et dolore magna aliqua. Cit enim ad minim ' +
+  'veniam. quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea ' +
+  'commodo consequat. Duis aute irure dolor in reprehenderit in voluptate ' +
+  'velit esse cillum dolore eu fugiat nulla pariatur Excepteur Sint occaecat ' +
+  'cupidatat non proident. sunt in culpa qui offcia deserunt mollit anim id ' +
+  'est laborum.';
+
+const _CATEGORIES = [
+  { id: 'copper_ware',      name: 'Copper Ware',      image: 'assets/images/category-covers/Copperware.jpeg',           sortOrder: 0  },
+  { id: 'papier_mache',     name: 'Papier Mache',     image: 'assets/images/category-covers/Papier machie.jpeg',        sortOrder: 1  },
+  { id: 'silverware',       name: 'Silverware',        image: 'assets/images/category-covers/Silverware.jpeg',           sortOrder: 2  },
+  { id: 'enamelware',       name: 'Enamelware',        image: 'assets/images/category-covers/Enamelware.jpeg',           sortOrder: 3  },
+  { id: 'terracotta',       name: 'Terracotta',        image: 'assets/images/category-covers/Terracotta.jpeg',           sortOrder: 4  },
+  { id: 'green_serpentine', name: 'Green Serpentine',  image: 'assets/images/category-covers/Green Serpentine.jpeg',     sortOrder: 5  },
+  { id: 'coins',            name: 'Coins',             image: 'assets/images/category-covers/Coins.jpeg',                sortOrder: 6  },
+  { id: 'shawls',           name: 'Shawls',            image: 'assets/images/category-covers/Shawls.jpeg',               sortOrder: 7  },
+  { id: 'jewellery',        name: 'Jewellery',         image: 'assets/images/category-covers/Jewellery.jpeg',            sortOrder: 8  },
+  { id: 'carpets',          name: 'Carpets',           image: 'assets/images/category-covers/Carpet.jpeg',               sortOrder: 9  },
+  { id: 'willow_wicker',    name: 'Willow Wicker',     image: 'assets/images/category-covers/willow wicker.jpeg',        sortOrder: 10 },
+  { id: 'woodwork',         name: 'Woodwork',          image: 'assets/images/category-covers/Woodwork.jpeg',             sortOrder: 11 },
+  { id: 'brassware',        name: 'Brass Ware',        image: 'assets/images/category-covers/Brassware.jpeg',            sortOrder: 12 },
+];
+
+exports.seedCategories = functions
+  .region('asia-south1')
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+
+    const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
+    if (!userDoc.exists || userDoc.data().role !== 'admin') {
+      throw new functions.https.HttpsError('permission-denied', 'Admin only.');
+    }
+
+    const db = admin.firestore();
+    const col = db.collection('categories');
+
+    // Delete all existing categories
+    const existing = await col.get();
+    const deleteBatch = db.batch();
+    existing.docs.forEach(doc => deleteBatch.delete(doc.ref));
+    await deleteBatch.commit();
+
+    // Write all 14 new categories
+    const writeBatch = db.batch();
+    _CATEGORIES.forEach(cat => {
+      writeBatch.set(col.doc(cat.id), {
+        name: cat.name,
+        image: cat.image,
+        icon: '',
+        description: _SEED_DESCRIPTION,
+        sortOrder: cat.sortOrder,
+      });
+    });
+    await writeBatch.commit();
+
+    return { count: _CATEGORIES.length };
+  });
+
 // ── geminiDescribeProduct ─────────────────────────────────────────────────────
 exports.geminiDescribeProduct = functions
   .region('asia-south1')
@@ -204,6 +267,7 @@ exports.geminiDescribeProduct = functions
     if (!apiKey) {
       throw new functions.https.HttpsError('internal', 'Gemini API key not configured.');
     }
+    console.log('geminiDescribeProduct: key present, length=', apiKey.length, 'model=', MODEL_ID);
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
@@ -221,7 +285,7 @@ exports.geminiDescribeProduct = functions
       const result = await model.generateContent(parts);
       return { text: result.response.text() };
     } catch (err) {
-      console.error('geminiDescribeProduct error:', err);
-      throw new functions.https.HttpsError('internal', 'AI description failed.');
+      console.error('geminiDescribeProduct error:', err.message, err.stack);
+      throw new functions.https.HttpsError('internal', `${err.message}`);
     }
   });

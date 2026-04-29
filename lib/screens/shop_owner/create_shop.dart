@@ -26,15 +26,8 @@ class _CreateShopState extends State<CreateShop> {
   XFile? _coverImageFile;
   XFile? _logoFile;
 
-  String _selectedCategory = 'pashmina';
   bool _loading = false;
   bool get _isEditing => widget.existingShop != null;
-
-  final List<Map<String, String>> _categories = [
-    {'id': 'pashmina', 'name': 'Pashmina'},
-    {'id': 'papier_mache', 'name': 'Papier Mache'},
-    {'id': 'wood', 'name': 'Walnut Wood'},
-  ];
 
   @override
   void initState() {
@@ -44,7 +37,6 @@ class _CreateShopState extends State<CreateShop> {
       _nameCtrl.text = s.shopName;
       _descCtrl.text = s.description;
       _locationCtrl.text = s.location;
-      _selectedCategory = s.categoryId;
     }
   }
 
@@ -64,13 +56,11 @@ class _CreateShopState extends State<CreateShop> {
       final uid = FirebaseAuth.instance.currentUser!.uid;
       final col = FirebaseFirestore.instance.collection('shops');
 
-      // Pre-generate or reuse the doc reference so we have the ID for Storage paths
       final docRef = _isEditing
           ? col.doc(widget.existingShop!.id)
           : col.doc();
       final shopId = docRef.id;
 
-      // Upload images if new files were picked, otherwise keep existing URLs
       String coverUrl = _isEditing ? widget.existingShop!.coverImage : '';
       String logoUrl = _isEditing ? widget.existingShop!.logo : '';
 
@@ -93,7 +83,6 @@ class _CreateShopState extends State<CreateShop> {
         'location': _locationCtrl.text.trim(),
         'coverImage': coverUrl,
         'logo': logoUrl,
-        'categoryId': _selectedCategory,
         'ownerId': uid,
         'isOpen': true,
         'rating': _isEditing ? widget.existingShop!.rating : 0.0,
@@ -176,33 +165,6 @@ class _CreateShopState extends State<CreateShop> {
                     v!.isEmpty ? 'Location is required' : null,
               ),
 
-              _label('Category'),
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF3D2B1F)),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategory,
-                    isExpanded: true,
-                    items: _categories
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c['id'],
-                            child: Text(c['name']!),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedCategory = v!),
-                  ),
-                ),
-              ),
-
               ImagePickerField(
                 label: 'Cover Image',
                 aspectRatio: 16 / 7,
@@ -244,7 +206,7 @@ class _CreateShopState extends State<CreateShop> {
                         )
                       : Text(
                           _isEditing ? 'Save Changes' : 'Create Shop',
-                          style: const TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 18),
                         ),
                 ),
               ),
@@ -261,7 +223,7 @@ class _CreateShopState extends State<CreateShop> {
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 13,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
           color: Color(0xFF3D2B1F),
           letterSpacing: 0.3,
@@ -282,9 +244,10 @@ class _CreateShopState extends State<CreateShop> {
         controller: controller,
         maxLines: maxLines,
         validator: validator,
+        style: const TextStyle(color: Color(0xFF3D2B1F), fontSize: 15),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
           filled: true,
           fillColor: Colors.white,
         ),

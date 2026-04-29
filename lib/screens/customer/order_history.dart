@@ -39,7 +39,7 @@ class OrderHistory extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 48)),
+                  const Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 50)),
                   const SizedBox(height: 16),
                   Text(
                     'No orders yet.\nStart shopping to see your orders here.',
@@ -232,7 +232,7 @@ class _OrderCard extends StatelessWidget {
   Widget _imgFallback() => Container(
     width: 44, height: 44, color: AppColors.surface,
     child: const Center(
-      child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 14)),
+      child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 16)),
     ),
   );
 }
@@ -292,7 +292,7 @@ class _OrderTimeline extends StatelessWidget {
               Text(
                 steps[stepIndex],
                 style: AppTextStyles.caption.copyWith(
-                  fontSize: 9,
+                  fontSize: 11,
                   color: isCompleted ? AppColors.stoneLight : AppColors.stone,
                   fontWeight: isCompleted ? FontWeight.w600 : FontWeight.normal,
                 ),

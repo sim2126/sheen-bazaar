@@ -299,7 +299,7 @@ class _ShopDetailState extends State<ShopDetail> {
     return Container(
       color: AppColors.walnutDeep,
       child: const Center(
-        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 40)),
+        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 42)),
       ),
     );
   }
@@ -358,7 +358,7 @@ class _ProductCard extends StatelessWidget {
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.saffron,
                       fontWeight: FontWeight.w700,
-                      fontSize: 13,
+                      fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -381,7 +381,7 @@ class _ProductCard extends StatelessWidget {
     return Container(
       color: AppColors.surface,
       child: const Center(
-        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 24)),
+        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 26)),
       ),
     );
   }

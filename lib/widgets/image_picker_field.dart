@@ -25,6 +25,8 @@ class ImagePickerField extends StatelessWidget {
     final file = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 85,
+      maxWidth: 1024,
+      maxHeight: 1024,
     );
     if (file != null) onPick(file);
   }
@@ -42,7 +44,7 @@ class ImagePickerField extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 15,
               fontWeight: FontWeight.w600,
               color: Color(0xFF3D2B1F),
               letterSpacing: 0.3,
@@ -122,7 +124,7 @@ class ImagePickerField extends StatelessWidget {
             'Tap to upload',
             style: TextStyle(
               color: Color(0xFF3D2B1F),
-              fontSize: 12,
+              fontSize: 14,
             ),
           ),
         ],

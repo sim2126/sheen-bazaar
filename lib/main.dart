@@ -35,31 +35,31 @@ class SheenBazaarApp extends StatelessWidget {
             onSecondary: AppColors.cream,
           ),
           scaffoldBackgroundColor: AppColors.walnut,
-          textTheme: GoogleFonts.ralewayTextTheme().copyWith(
-            displayLarge: GoogleFonts.cormorantGaramond(
-              fontSize: 36,
-              fontWeight: FontWeight.w600,
+          textTheme: GoogleFonts.nunitoTextTheme().copyWith(
+            displayLarge: GoogleFonts.playfairDisplay(
+              fontSize: 38,
+              fontWeight: FontWeight.w500,
               color: AppColors.cream,
-              letterSpacing: 1.2,
+              letterSpacing: 1.0,
             ),
-            headlineMedium: GoogleFonts.cormorantGaramond(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
+            headlineMedium: GoogleFonts.playfairDisplay(
+              fontSize: 24,
+              fontWeight: FontWeight.w500,
               color: AppColors.cream,
-              letterSpacing: 0.5,
+              letterSpacing: 0.3,
             ),
-            bodyLarge: GoogleFonts.raleway(
-              fontSize: 16,
+            bodyLarge: GoogleFonts.nunito(
+              fontSize: 18,
               color: AppColors.cream,
               height: 1.6,
             ),
-            bodyMedium: GoogleFonts.raleway(
-              fontSize: 14,
+            bodyMedium: GoogleFonts.nunito(
+              fontSize: 16,
               color: AppColors.cream,
               height: 1.5,
             ),
-            bodySmall: GoogleFonts.raleway(
-              fontSize: 12,
+            bodySmall: GoogleFonts.nunito(
+              fontSize: 14,
               color: AppColors.stone,
             ),
           ),
@@ -69,11 +69,11 @@ class SheenBazaarApp extends StatelessWidget {
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: true,
-            titleTextStyle: GoogleFonts.cormorantGaramond(
-              fontSize: 22,
+            titleTextStyle: GoogleFonts.playfairDisplay(
+              fontSize: 24,
               fontWeight: FontWeight.w500,
               color: AppColors.cream,
-              letterSpacing: 2.0,
+              letterSpacing: 1.8,
             ),
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
@@ -84,8 +84,8 @@ class SheenBazaarApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(30),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-              textStyle: GoogleFonts.raleway(
-                fontSize: 14,
+              textStyle: GoogleFonts.nunito(
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.8,
               ),
@@ -99,8 +99,8 @@ class SheenBazaarApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(30),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-              textStyle: GoogleFonts.raleway(
-                fontSize: 14,
+              textStyle: GoogleFonts.nunito(
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.8,
               ),
@@ -121,8 +121,8 @@ class SheenBazaarApp extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: AppColors.terracotta, width: 2),
             ),
-            labelStyle: GoogleFonts.raleway(color: AppColors.stone),
-            hintStyle: GoogleFonts.raleway(color: AppColors.stone),
+            labelStyle: GoogleFonts.nunito(color: AppColors.stone),
+            hintStyle: GoogleFonts.nunito(color: AppColors.stone),
             prefixIconColor: AppColors.stone,
             suffixIconColor: AppColors.stone,
           ),

@@ -160,7 +160,7 @@ class _CartScreenState extends State<CartScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 48)),
+          const Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 50)),
           const SizedBox(height: 20),
           Text('Your cart is empty', style: AppTextStyles.displaySmall),
           const SizedBox(height: 8),
@@ -230,7 +230,7 @@ class _CartScreenState extends State<CartScreen> {
                       child: CircularProgressIndicator(
                         color: AppColors.cream, strokeWidth: 2),
                     )
-                  : Text('Place Order', style: AppTextStyles.button.copyWith(fontSize: 16)),
+                  : Text('Place Order', style: AppTextStyles.button.copyWith(fontSize: 18)),
             ),
           ),
         ],
@@ -347,7 +347,7 @@ class _CartItemCard extends StatelessWidget {
   Widget _imgFallback() => Container(
     width: 70, height: 70, color: AppColors.surface,
     child: const Center(
-      child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 20)),
+      child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 22)),
     ),
   );
 }

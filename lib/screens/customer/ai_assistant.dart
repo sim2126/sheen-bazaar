@@ -210,7 +210,7 @@ $catalogSection
           children: [
             Text(
               '✨ ',
-              style: TextStyle(fontSize: 18),
+              style: TextStyle(fontSize: 20),
             ),
             Text('AI Shopping Assistant'),
           ],
@@ -236,7 +236,7 @@ $catalogSection
                   SizedBox(width: 10),
                   Text(
                     'Finding matching products...',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF8FA8A0), fontStyle: FontStyle.italic),
+                    style: TextStyle(fontSize: 14, color: Color(0xFF8FA8A0), fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
@@ -295,12 +295,16 @@ $catalogSection
                     controller: _controller,
                     onSubmitted: (_) =>
                         _sendMessage(),
+                    style: const TextStyle(
+                      color: Color(0xFF3D2B1F),
+                      fontSize: 16,
+                    ),
                     decoration: InputDecoration(
                       hintText:
                           'Ask about products...',
                       hintStyle: TextStyle(
                         color: Colors.grey[400],
-                        fontSize: 14,
+                        fontSize: 16,
                       ),
                       filled: true,
                       fillColor: const Color(
@@ -403,7 +407,7 @@ class _MessageBubble extends StatelessWidget {
         child: Text(
           message.text,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 16,
             height: 1.5,
             color: isUser
                 ? const Color(0xFFF5EDE0)

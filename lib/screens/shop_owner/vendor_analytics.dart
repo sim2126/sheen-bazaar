@@ -203,7 +203,7 @@ class _VendorAnalyticsState extends State<VendorAnalytics> {
                                     child: Center(
                                       child: Text('${i + 1}',
                                           style: TextStyle(
-                                            fontSize: 12, fontWeight: FontWeight.w700,
+                                            fontSize: 14, fontWeight: FontWeight.w700,
                                             color: i == 0 ? Colors.white : const Color(0xFF3D2B1F),
                                           )),
                                     ),
@@ -211,16 +211,16 @@ class _VendorAnalyticsState extends State<VendorAnalytics> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(ps.name,
-                                        style: const TextStyle(fontSize: 13, color: Color(0xFF3D2B1F)),
+                                        style: const TextStyle(fontSize: 15, color: Color(0xFF3D2B1F)),
                                         maxLines: 1, overflow: TextOverflow.ellipsis),
                                   ),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text('${ps.totalQty} sold',
-                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFC8821A))),
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFC8821A))),
                                       Text('₹${ps.totalRevenue.toStringAsFixed(0)}',
-                                          style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                                          style: TextStyle(fontSize: 13, color: Colors.grey[500])),
                                     ],
                                   ),
                                 ],
@@ -246,7 +246,7 @@ class _VendorAnalyticsState extends State<VendorAnalytics> {
                             ),
                             child: Text(
                               '${_lowStock.length}',
-                              style: TextStyle(fontSize: 12, color: Colors.red[700], fontWeight: FontWeight.w700),
+                              style: TextStyle(fontSize: 14, color: Colors.red[700], fontWeight: FontWeight.w700),
                             ),
                           ),
                         ],
@@ -287,7 +287,7 @@ class _VendorAnalyticsState extends State<VendorAnalytics> {
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(item.name,
-                                        style: const TextStyle(fontSize: 13, color: Color(0xFF3D2B1F)),
+                                        style: const TextStyle(fontSize: 15, color: Color(0xFF3D2B1F)),
                                         maxLines: 1, overflow: TextOverflow.ellipsis),
                                   ),
                                   Container(
@@ -299,7 +299,7 @@ class _VendorAnalyticsState extends State<VendorAnalytics> {
                                     child: Text(
                                       item.stock == 0 ? 'Out of stock' : '${item.stock} left',
                                       style: TextStyle(
-                                        fontSize: 12, fontWeight: FontWeight.w600,
+                                        fontSize: 14, fontWeight: FontWeight.w600,
                                         color: item.stock == 0 ? Colors.red[700] : Colors.orange[700],
                                       ),
                                     ),
@@ -329,7 +329,7 @@ class _VendorAnalyticsState extends State<VendorAnalytics> {
       ),
       child: Text(msg,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey[500], fontStyle: FontStyle.italic, fontSize: 13)),
+          style: TextStyle(color: Colors.grey[500], fontStyle: FontStyle.italic, fontSize: 15)),
     );
   }
 }
@@ -342,7 +342,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(label,
         style: const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.w700,
+          fontSize: 18, fontWeight: FontWeight.w700,
           color: Color(0xFF3D2B1F), letterSpacing: 0.3,
         ));
   }
@@ -370,9 +370,9 @@ class _StatCard extends StatelessWidget {
         children: [
           icon,
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF3D2B1F))),
+          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF3D2B1F))),
           const SizedBox(height: 3),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
         ],
       ),
     );

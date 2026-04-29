@@ -81,10 +81,10 @@ class _HamburgerMenuState extends State<HamburgerMenu>
                     opacity: _stagger(0),
                     child: Text(
                       'Sheen Bazaar',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 16,
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 18,
                         color: AppColors.stone,
-                        letterSpacing: 1.2,
+                        letterSpacing: 1.0,
                       ),
                     ),
                   ),
@@ -228,8 +228,8 @@ class _NavItem extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.cormorantGaramond(
-                    fontSize: 52,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 48,
                     fontWeight: FontWeight.w400,
                     color: activeColor,
                     letterSpacing: 0.5,
@@ -248,7 +248,7 @@ class _NavItem extends StatelessWidget {
                     child: Text(
                       badge!,
                       style: AppTextStyles.caption
-                          .copyWith(color: AppColors.cream, fontSize: 11),
+                          .copyWith(color: AppColors.cream, fontSize: 13),
                     ),
                   ),
                 ],

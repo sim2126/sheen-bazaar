@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isOwnerOf(shopId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/shops/$(shopId)).data.ownerId == request.auth.uid;
+    }
+
+    // ── Categories — public read, admin write ─────────────────────────────────
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() &&
+                      (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ── Shops ─────────────────────────────────────────────────────────────────
+    match /shops/{shopId} {
+      allow read:   if true;
+      allow create: if isSignedIn();
+      allow update: if isOwnerOf(shopId) || isAdmin();
+      allow delete: if isOwnerOf(shopId) || isAdmin();
+
+      // Products within a shop
+      match /products/{productId} {
+        allow read:   if true;
+        allow create: if isOwnerOf(shopId);
+        allow update: if isOwnerOf(shopId);
+        allow delete: if isOwnerOf(shopId) || isAdmin();
+      }
+
+      // Reviews within a shop
+      match /reviews/{reviewId} {
+        allow read:   if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isSignedIn() &&
+                                request.auth.uid == resource.data.userId;
+      }
+    }
+
+    // ── CollectionGroup read for products (needed for cross-shop category queries)
+    match /{path=**}/products/{productId} {
+      allow read: if true;
+    }
+
+    // ── Orders ────────────────────────────────────────────────────────────────
+    match /orders/{orderId} {
+      allow read:   if isSignedIn() && (
+                      request.auth.uid == resource.data.userId ||
+                      isOwnerOf(resource.data.shopId) ||
+                      isAdmin()
+                    );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+                      isOwnerOf(resource.data.shopId) || isAdmin()
+                    );
+      allow delete: if isAdmin();
+    }
+  }
+}

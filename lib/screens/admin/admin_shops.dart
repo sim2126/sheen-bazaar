@@ -146,7 +146,7 @@ class AdminShops extends StatelessWidget {
                                 '',
                             style:
                                 const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   color: Color(
                                     0xFF8FA8A0,
                                   ),
@@ -158,7 +158,7 @@ class AdminShops extends StatelessWidget {
                           Text(
                             'Category: ${data['categoryId'] ?? ''}',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               color: Colors
                                   .grey[500],
                             ),
@@ -182,7 +182,7 @@ class AdminShops extends StatelessWidget {
                               child: Text(
                                 isOpen ? 'Active' : 'Banned',
                                 style: TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.w600,
+                                  fontSize: 13, fontWeight: FontWeight.w600,
                                   color: isOpen ? Colors.green[700] : Colors.red[700],
                                 ),
                               ),
@@ -212,7 +212,7 @@ class AdminShops extends StatelessWidget {
                                   Text(
                                     isVerified ? 'Verified' : 'Verify',
                                     style: TextStyle(
-                                      fontSize: 10, fontWeight: FontWeight.w600,
+                                      fontSize: 12, fontWeight: FontWeight.w600,
                                       color: isVerified ? const Color(0xFFC8821A) : Colors.grey[600],
                                     ),
                                   ),
@@ -306,7 +306,7 @@ class _ShopProductsList extends StatelessWidget {
             child: Text(
               'No products listed.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 color: Colors.grey[400],
                 fontStyle: FontStyle.italic,
               ),
@@ -331,7 +331,7 @@ class _ShopProductsList extends StatelessWidget {
               Text(
                 '${products.length} product${products.length > 1 ? 's' : ''}',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: Colors.grey[500],
                   letterSpacing: 0.3,
                 ),
@@ -377,7 +377,7 @@ class _ShopProductsList extends StatelessWidget {
                         child: Text(
                           pd['name'] ?? '',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 14,
                             color: Color(
                               0xFF3D2B1F,
                             ),
@@ -390,7 +390,7 @@ class _ShopProductsList extends StatelessWidget {
                       Text(
                         '₹${pd['price']}',
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight:
                               FontWeight.w600,
                           color: Color(

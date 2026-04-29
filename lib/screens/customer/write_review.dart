@@ -181,7 +181,7 @@ class _WriteReviewState extends State<WriteReview> {
               decoration: InputDecoration(
                 hintText: 'What did you love? What could be better?',
                 hintStyle: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.stone, fontSize: 13),
+                  color: AppColors.stone, fontSize: 15),
                 filled: true,
                 fillColor: AppColors.surface,
                 border: OutlineInputBorder(
@@ -219,7 +219,7 @@ class _WriteReviewState extends State<WriteReview> {
                           color: AppColors.cream, strokeWidth: 2),
                       )
                     : Text('Submit Review',
-                        style: AppTextStyles.button.copyWith(fontSize: 16)),
+                        style: AppTextStyles.button.copyWith(fontSize: 18)),
               ),
             ),
 

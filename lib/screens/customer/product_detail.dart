@@ -186,7 +186,7 @@ class ProductDetail extends StatelessWidget {
                             : inCart
                                 ? 'Go to Cart →'
                                 : 'Add to Cart',
-                        style: AppTextStyles.button.copyWith(fontSize: 16),
+                        style: AppTextStyles.button.copyWith(fontSize: 18),
                       ),
                     ),
                   ),
@@ -227,7 +227,7 @@ class ProductDetail extends StatelessWidget {
     return Container(
       color: AppColors.surface,
       child: const Center(
-        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 40)),
+        child: Text('✦', style: TextStyle(color: AppColors.stone, fontSize: 42)),
       ),
     );
   }

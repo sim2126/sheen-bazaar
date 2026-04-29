@@ -132,7 +132,7 @@ class VendorOrders extends StatelessWidget {
                                   fontWeight:
                                       FontWeight
                                           .w700,
-                                  fontSize: 13,
+                                  fontSize: 15,
                                   color: Color(
                                     0xFF3D2B1F,
                                   ),
@@ -141,7 +141,7 @@ class VendorOrders extends StatelessWidget {
                           Text(
                             '${createdAt.day}/${createdAt.month}/${createdAt.year}',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               color: Colors
                                   .grey[500],
                             ),
@@ -167,7 +167,7 @@ class VendorOrders extends StatelessWidget {
                                   item['name'] ??
                                       '',
                                   style: const TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 15,
                                     color: Color(
                                       0xFF3D2B1F,
                                     ),
@@ -177,7 +177,7 @@ class VendorOrders extends StatelessWidget {
                               Text(
                                 'x${item['qty']}',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   color: Colors
                                       .grey[500],
                                 ),
@@ -188,7 +188,7 @@ class VendorOrders extends StatelessWidget {
                               Text(
                                 '₹${item['price']}',
                                 style: const TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 15,
                                   fontWeight:
                                       FontWeight
                                           .w600,
@@ -217,7 +217,7 @@ class VendorOrders extends StatelessWidget {
                                   fontWeight:
                                       FontWeight
                                           .w700,
-                                  fontSize: 14,
+                                  fontSize: 16,
                                   color: Color(
                                     0xFF3D2B1F,
                                   ),
@@ -288,9 +288,10 @@ class _StatusDropdown extends StatelessWidget {
         child: DropdownButton<String>(
           value: currentStatus,
           isDense: true,
+          dropdownColor: Colors.white,
           style: TextStyle(
             color: _statusColor,
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
           items: const [

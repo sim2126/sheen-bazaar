@@ -76,6 +76,7 @@ flutter:
     - assets/images/wicker_basket.png
     - assets/images/pinjra_window.png
     - assets/lottie/
+    - assets/images/category-covers/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
