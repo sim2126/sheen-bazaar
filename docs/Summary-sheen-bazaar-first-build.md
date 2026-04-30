@@ -1,7 +1,7 @@
 # Sheen Bazaar — First Build Summary
 
 Everything needed to continue development in a new conversation.
-Generated: 2026-04-29
+Last updated: 2026-04-30
 
 ---
 
@@ -246,8 +246,8 @@ lib/
     │
     ├── customer/
     │   ├── customer_home.dart         Hero + Lottie animation + category list
-    │   ├── search_screen.dart         Search input page (autofocus, suggestion chips)
-    │   ├── search_results_screen.dart Results via collectionGroup, in-stock first sort
+    │   ├── search_screen.dart         Search input page — autofocus bar + 6 suggestion chips
+    │   ├── search_results_screen.dart Results via collectionGroup, in-stock first, out-of-stock dimmed 55%
     │   ├── shops_list.dart            Shops for a category (editorial animated cards)
     │   ├── shop_detail.dart           Shop page: products grid + reviews
     │   ├── product_detail.dart        Product page: image zoom, AI/plain description, cart CTA
@@ -261,6 +261,7 @@ lib/
     │   ├── shop_dashboard.dart        Shop overview: stats, edit, products, orders, analytics
     │   ├── create_shop.dart           Create/edit shop form (name, description, location, images)
     │   ├── manage_products.dart       Product list + AddEditProduct form + AI generate button
+    │   │                              Add Product field order: Category → Name → Price+Stock → Image → Description+AI
     │   ├── vendor_orders.dart         Order management with status update dropdown
     │   └── vendor_analytics.dart      Revenue stats, best sellers, low-stock alerts
     │
@@ -309,7 +310,10 @@ The app uses `Brightness.dark` globally. Any screen that uses a **light/beige ba
 
 ### Product Search
 Two-screen flow: `SearchScreen` (input) → `SearchResultsScreen` (results).
-Results use `collectionGroup('products').get()` then client-side filter by name/description. Out-of-stock products are shown dimmed at 55% opacity with a "sold out" overlay. Sorted: in-stock first, name matches before description matches, then price ascending.
+
+**SearchScreen:** Autofocus text field + 6 suggestion chips (Pashmina shawl, Papier Mache box, Walnut wood carving, Copper bowl, Silk carpet, Silver jewellery). Tapping a chip fills the field and submits immediately. Navigates to results via `fadeSlideRoute`.
+
+**SearchResultsScreen:** Fetches all products via `collectionGroup('products').get()`, filters by name/description match in Dart (no Firestore text search), then fetches the matched shops in parallel. Out-of-stock products are included but rendered at 55% opacity with a dark "sold out" overlay on the image and red "Out of stock" label. Sorted: in-stock first → name matches before description matches → price ascending. Shows result count header. Tapping any card navigates to `ProductDetail`.
 
 ### AI Shopping Assistant (`AiAssistant`)
 Chat screen calling `GeminiService.sendMessage` → `geminiChat` Cloud Function. The function uses context caching: it loads the full product catalog + system prompt once and reuses the cached context for 1 hour. The Dart client tracks `_category` and `_budget` from conversation context and attaches the catalog lazily when context is sufficient.
@@ -336,7 +340,7 @@ Sparkle button in the Add Product form. Calls `GeminiService.sendMessageWithImag
 
 ## 12. Known Patterns & Gotchas
 
-1. **Phone numbers are integers in Firestore.** Always call `.toString()` before passing to `Text()`. Found in `admin_users.dart`.
+1. **Phone numbers are integers in Firestore.** Always call `.toString()` before passing to `Text()`. Fixed in `admin_users.dart` — the bug caused a red screen crash when scrolling past the customer row in All Users.
 
 2. **`collectionGroup` queries need two things:** (a) a wildcard security rule `match /{path=**}/products/{productId}` and (b) a `fieldOverrides` entry with `queryScope: "COLLECTION_GROUP"` in `firestore.indexes.json`. Without both, queries throw `failed-precondition`.
 
@@ -344,7 +348,7 @@ Sparkle button in the Add Product form. Calls `GeminiService.sendMessageWithImag
 
 4. **Gemini model:** Only `gemini-2.5-flash` works for new API keys as of April 2026. `gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-2.0-flash-lite` all return 404.
 
-5. **`removeShopCategories` Cloud Function:** Was deployed as a one-time migration and then deleted. Do not redeploy it.
+5. **`removeShopCategories` Cloud Function:** Was deployed as a one-time migration to strip `categoryId` from all shop documents, then explicitly deleted from both `functions/index.js` and GCP (`firebase functions:delete removeShopCategories --region asia-south1 --force`). Do not redeploy it.
 
 6. **`sculptures` category:** Removed from Cloud Function seed list and filtered out in `CategoryService`. If it reappears in Firestore, run Seed Categories from admin panel.
 
@@ -368,13 +372,47 @@ firebase functions:delete functionName --region asia-south1 --force
 firebase functions:secrets:set GEMINI_KEY
 firebase functions:secrets:access GEMINI_KEY
 
-# Run Flutter
+# Run Flutter (debug)
 flutter run
+
+# Build release APK (signed with debug key — fine for testing/sharing)
+flutter build apk --release
+
+# Build smaller APKs split by CPU architecture (use arm64-v8a for modern phones)
+flutter build apk --split-per-abi --release
 ```
+
+APK output path: `build/app/outputs/flutter-apk/app-release.apk`
+
+Install directly to a connected phone: `flutter install`
 
 ---
 
-## 14. Assets
+## 14. Android Build Configuration
+
+| Setting | Value |
+|---|---|
+| App label (shown on device) | `Sheen Bazaar` |
+| Application ID | `com.example.sheen_bazaar` |
+| Version name | `1.0.0` |
+| Version code | `1` |
+| Min SDK | Flutter default (flutter.minSdkVersion) |
+| Target SDK | Flutter default (flutter.targetSdkVersion) |
+| Signing (current) | Debug keystore — fine for testing, **not** for Play Store |
+| Build file | `android/app/build.gradle.kts` |
+| Manifest | `android/app/src/main/AndroidManifest.xml` |
+
+**Permissions declared in AndroidManifest:**
+- `READ_MEDIA_IMAGES` — Android 13+ gallery access (image picker)
+- `READ_EXTERNAL_STORAGE` maxSdkVersion 32 — Android 12 and below gallery access
+
+**Before publishing to Google Play, two changes are required:**
+1. Create a production keystore and update `buildTypes.release.signingConfig` in `build.gradle.kts`
+2. Change `applicationId` from `com.example.sheen_bazaar` to an owned domain (e.g. `com.sheenbazaar.app`)
+
+---
+
+## 15. Assets
 
 ```
 assets/
@@ -392,9 +430,9 @@ assets/
 
 ---
 
-## 15. What Was Built in This First Build Session
+## 16. Build History
 
-In rough chronological order:
+### Session 1 (2026-04-29)
 - Full auth system (login/register, role-based routing)
 - Customer home with Lottie hero and animated category cards
 - Category → shops list → shop detail → product detail flow
@@ -411,3 +449,11 @@ In rough chronological order:
 - Category architecture fix: categories on products, not shops
 - Gemini model migration: from gemini-1.5-flash → gemini-2.5-flash
 - One-time migration: removed `categoryId` from all shop documents
+
+### Session 2 (2026-04-30)
+- **Bug fix:** `admin_users.dart` — `type 'int' is not a subtype of String` red screen crash caused by phone number stored as int being passed directly to `Text()`. Fixed with `.toString()`.
+- **Cleanup:** `removeShopCategories` removed from `functions/index.js` and deleted from GCP. `shops_list.dart` error message restored to user-friendly copy.
+- **Search rewrite:** `search_screen.dart` simplified to a clean input-only page with 6 suggestion chips. `search_results_screen.dart` created as a separate results page — shows out-of-stock products dimmed with "sold out" overlay.
+- **Add Product form reorder:** Field order changed to Category → Name → Price + Stock → Image → Description + AI button.
+- **Android app label fixed:** `android:label` in `AndroidManifest.xml` changed from `sheen_bazaar` to `Sheen Bazaar`.
+- **APK build:** First release APK built with `flutter build apk --release` (debug-signed, for internal testing).

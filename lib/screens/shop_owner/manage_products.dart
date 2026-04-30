@@ -406,87 +406,6 @@ class _AddEditProductState extends State<AddEditProduct> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _label('Product Name'),
-              _field(
-                controller: _nameCtrl,
-                hint: 'e.g. Pure Pashmina Shawl',
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-
-              _label('Description'),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: _descCtrl,
-                      hint: 'Describe the craft and its origin...',
-                      maxLines: 4,
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _AiGenerateButton(
-                      onGenerated: (text, details) => setState(() {
-                        _descCtrl.text = text;
-                        _generatedDetails = details;
-                      }),
-                      getProductName: () => _nameCtrl.text.trim(),
-                      getCategoryName: () => _categories
-                          .firstWhere(
-                            (c) => c['id'] == _categoryId,
-                            orElse: () => {'name': 'Kashmiri Handicraft'},
-                          )['name']!,
-                      getImageFile: () => _imageFile,
-                    ),
-                  ),
-                ],
-              ),
-
-              ImagePickerField(
-                label: 'Product Image',
-                aspectRatio: 1.0,
-                pickedFile: _imageFile,
-                existingUrl: _isEditing ? widget.existingProduct!.image : '',
-                onPick: (file) => setState(() => _imageFile = file),
-              ),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _label('Price (₹)'),
-                        _field(
-                          controller: _priceCtrl,
-                          hint: '4500',
-                          keyboardType: TextInputType.number,
-                          validator: (v) => v!.isEmpty ? 'Required' : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _label('Stock'),
-                        _field(
-                          controller: _stockCtrl,
-                          hint: '10',
-                          keyboardType: TextInputType.number,
-                          validator: (v) => v!.isEmpty ? 'Required' : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
               _label('Category'),
               Container(
                 margin: const EdgeInsets.only(bottom: 24),
@@ -529,6 +448,87 @@ class _AddEditProductState extends State<AddEditProduct> {
                           onChanged: (v) => setState(() => _categoryId = v),
                         ),
                       ),
+              ),
+
+              _label('Product Name'),
+              _field(
+                controller: _nameCtrl,
+                hint: 'e.g. Pure Pashmina Shawl',
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _label('Price (₹)'),
+                        _field(
+                          controller: _priceCtrl,
+                          hint: '4500',
+                          keyboardType: TextInputType.number,
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _label('Stock'),
+                        _field(
+                          controller: _stockCtrl,
+                          hint: '10',
+                          keyboardType: TextInputType.number,
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              ImagePickerField(
+                label: 'Product Image',
+                aspectRatio: 1.0,
+                pickedFile: _imageFile,
+                existingUrl: _isEditing ? widget.existingProduct!.image : '',
+                onPick: (file) => setState(() => _imageFile = file),
+              ),
+
+              _label('Description'),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: _descCtrl,
+                      hint: 'Describe the craft and its origin...',
+                      maxLines: 4,
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _AiGenerateButton(
+                      onGenerated: (text, details) => setState(() {
+                        _descCtrl.text = text;
+                        _generatedDetails = details;
+                      }),
+                      getProductName: () => _nameCtrl.text.trim(),
+                      getCategoryName: () => _categories
+                          .firstWhere(
+                            (c) => c['id'] == _categoryId,
+                            orElse: () => {'name': 'Kashmiri Handicraft'},
+                          )['name']!,
+                      getImageFile: () => _imageFile,
+                    ),
+                  ),
+                ],
               ),
 
               SizedBox(
