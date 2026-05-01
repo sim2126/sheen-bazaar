@@ -10,7 +10,7 @@ A full-stack mobile marketplace for authentic Kashmiri handicrafts — connectin
 
 ## Table of Contents
 
-1. [Screenshots](#1-screenshots)
+1. [Splash & Authentication](#1-splash--authentication)
 2. [Customer Experience](#2-customer-experience)
 3. [Vendor Experience](#3-vendor-experience)
 4. [Admin Panel](#4-admin-panel)
@@ -25,72 +25,87 @@ A full-stack mobile marketplace for authentic Kashmiri handicrafts — connectin
 
 ---
 
-## 1. Screenshots
+## 1. Splash & Authentication
 
-<p float="left">
-  <img src="screenshots/splash.png" width="200" alt="Splash Screen"/>
-  <img src="screenshots/login.png" width="200" alt="Login Page"/>
-  <img src="screenshots/home.png" width="200" alt="Customer Home"/>
-  <img src="screenshots/shops.png" width="200" alt="Shops List"/>
-</p>
+The app opens to a full-screen hero with a falling-leaves Lottie animation and sequenced text reveals — "Sheen Bazaar" fades in left to right, followed by a gold divider and the tagline. No login wall: guests land directly on the browse screen. A hamburger menu in the top corner gives access to search, cart, orders, the AI assistant, and sign in.
 
-<p float="left">
-  <img src="screenshots/shop_detail.png" width="200" alt="Shop Detail"/>
-  <img src="screenshots/product_detail.png" width="200" alt="Product Detail"/>
-  <img src="screenshots/cart.png" width="200" alt="Cart"/>
-  <img src="screenshots/orders.png" width="200" alt="Order History"/>
-</p>
+![Splash Screen](screenshots/SplashScreenHome.jpg)
 
-<p float="left">
-  <img src="screenshots/vendor_dashboard.png" width="200" alt="Vendor Dashboard"/>
-  <img src="screenshots/add_product.png" width="200" alt="Add Product with AI"/>
-  <img src="screenshots/vendor_orders.png" width="200" alt="Vendor Orders"/>
-  <img src="screenshots/admin_panel.png" width="200" alt="Admin Panel"/>
-</p>
+New users register by choosing a role — Customer or Artisan (Shop Owner) — alongside their name, phone, email, and password. Existing users log straight in. After login, the app routes each role to their respective home: admin to the Admin Panel, shop owners to their dashboard, customers back to browsing.
+
+![Login](screenshots/LogInScreen.jpg)
+
+![Register](screenshots/RegisterScreen.jpg)
 
 ---
 
 ## 2. Customer Experience
 
-The app opens directly to a full-screen hero with a falling-leaves Lottie animation and sequenced text reveals — no login wall. Guests can browse the entire marketplace freely. Signing in is only required when taking an action: adding to cart, placing an order, writing a review, or using the AI assistant.
+### Browsing
 
-**Browsing** — The home screen presents 13 Kashmiri handicraft categories (Copper Ware, Papier Mache, Silverware, Enamelware, Terracotta, Green Serpentine, Coins, Shawls, Jewellery, Carpets, Willow Wicker, Woodwork, Brass Ware) as full-width editorial cards with staggered entrance animations. Selecting a category shows all shops that carry in-stock products in that category — found via a Firestore collectionGroup query rather than a shop-level tag. Each shop card shows cover image, rating, location, verified artisan badge, and open/closed status.
+The home screen presents 13 Kashmiri handicraft categories — Copper Ware, Papier Mache, Silverware, Enamelware, Terracotta, Green Serpentine, Coins, Shawls, Jewellery, Carpets, Willow Wicker, Woodwork, and Brass Ware — as full-width editorial cards with staggered entrance animations. Each category card carries a cover image, name, description, and an "Explore Collection" prompt.
 
-**Search** — A dedicated search page (reachable from the hamburger menu) accepts a natural language query and navigates to a results page. Results pull from all products across all shops in a single collectionGroup query, filter by name and description match in Dart, and sort in-stock items to the top. Out-of-stock products are included but rendered at reduced opacity with a "sold out" overlay.
+![Categories](screenshots/CategoriesScreen.jpg)
 
-**Product detail** — Products with AI-generated descriptions display a structured view: a punchy tagline, a narrative craft box with left terracotta border, and a spec grid (material, craft technique, colour, dimensions, occasion, care instructions). Products without AI descriptions show a plain description with a category and location row.
+Selecting a category shows all shops that carry in-stock products in that category. This is resolved via a Firestore collectionGroup query on products — not a shop-level tag — so a shop appears in every category it stocks. Each shop card shows the cover image, name, location, rating, verified artisan badge, and open/closed status.
 
-**Cart and orders** — Multiple products from different shops can be added to a single cart. On checkout, one order document is created per shop automatically. Orders can be tracked through four stages — Placed, Confirmed, Dispatched, Delivered — with a visual progress timeline. Completed orders prompt a review.
+![Shops List](screenshots/ShopsScreen.jpg)
 
-**Reviews** — Customers can leave a star rating (1–5) and optional comment on any shop they have ordered from. Submitting a review updates the shop's live rating and total review count atomically.
+Entering a shop reveals the full storefront: cover image header, logo, rating, total reviews, an "Our Story" description section, a product grid, and customer reviews.
+
+![Shop Page](screenshots/ShopPage.jpg)
+
+### Product Detail
+
+Products with AI-generated descriptions display a structured view: a punchy tagline, a narrative craft box with a left terracotta border, and a spec grid covering material, craft technique, colour, dimensions, occasion, and care instructions. The product image is tappable for a full-screen zoom via PhotoView. Products without AI descriptions fall back to a plain description with category and location.
+
+![Product Page](screenshots/ProductPage.jpg)
+
+### Cart & Orders
+
+Multiple products from different shops can be added to a single cart. On checkout, one order document is created per shop automatically — a cart spanning three shops produces three separate orders. Orders move through four stages: Placed, Confirmed, Dispatched, and Delivered, each visualised on a progress timeline. Completed orders prompt a review.
+
+![Cart](screenshots/MyCartScreen.jpg)
+
+![My Orders](screenshots/MyOrdersScreen.jpg)
 
 ---
 
 ## 3. Vendor Experience
 
-Shop owners land on a dashboard showing their shop's cover image, logo, location, live rating, and open/closed toggle. From there they navigate to product management, incoming orders, or analytics.
+Shop owners land on a dashboard showing their shop's cover image, logo, location, live rating, and an open/closed toggle. Navigation tiles lead to product management, incoming orders, and analytics.
 
-**Shop setup** — Creating or editing a shop requires a name, description, location, a cover image (16:7 ratio), and a logo (square). Both images are picked from the device gallery and uploaded directly to Firebase Storage. The shop has no category tag — categories live on individual products.
+![Shop Owner Dashboard](screenshots/ShopOwnerDashboard.jpg)
 
-**Product management** — The Add Product form collects fields in this order: category (from the 13 canonical categories), product name, price and stock side by side, product image, and description. A sparkle button next to the description field triggers AI generation — Gemini analyses the uploaded image, product name, and selected category, and returns a structured JSON description that populates all spec fields. The fallback (no image) generates from name and category alone.
+### Adding Products
 
-**Orders** — Vendors see only their own shop's orders, filterable by status. Each order shows the customer's items, quantities, and total. Status can be updated via a dropdown: Placed → Confirmed → Dispatched → Delivered.
+The Add Product form collects fields in this order: category (from the 13 canonical categories), product name, price and stock side by side, product image, and description. A sparkle button next to the description field triggers AI generation — Gemini analyses the uploaded image, product name, and selected category, then returns a structured description covering all spec fields. If no image is attached, the generator falls back to text-only using the product name and category.
 
-**Analytics** — The analytics screen shows all-time and current-month revenue, a best-sellers list ranked by units sold, and a low-stock alert panel for products with three or fewer units remaining.
+![Add Product — Form](screenshots/AddProductScreen1.jpg)
+
+![Add Product — AI Description](screenshots/AddProductScreen2.jpg)
+
+### Analytics
+
+The analytics screen shows all-time and current-month revenue, a best-sellers list ranked by units sold, and a low-stock alert panel for products with three or fewer units remaining.
+
+![Shop Owner Analytics](screenshots/ShopOwnerAnalyticsScreen.jpg)
 
 ---
 
 ## 4. Admin Panel
 
-Admins access a dashboard with three live counters (total shops, orders, users) fed by real-time Firestore streams. Navigation tiles lead to dedicated management screens for shops, orders, and users.
+Admins access a dashboard with three live counters — total shops, orders, and users — fed by real-time Firestore streams. Navigation tiles lead to dedicated management screens.
 
-**Shops** — Every shop on the platform is listed with its logo, name, location, and verification status. Admins can ban or unban a shop (setting `isOpen` to false), grant or revoke the verified artisan badge, and browse a shop's product list inline.
+**Shops** — Every shop is listed with logo, name, location, and verification status. Admins can ban or unban a shop, grant or revoke the verified artisan badge, and browse a shop's product list inline.
 
 **Orders** — A full cross-shop order feed sorted by most recent, with colour-coded status badges: orange (Placed), blue (Confirmed), purple (Dispatched), green (Delivered).
 
-**Users** — All registered users with their role badges (Admin, Vendor, Customer), email, phone, and join date.
+**Users** — All registered users with role badges (Admin, Vendor, Customer), email, phone, and join date.
 
-**Seed categories** — A utility button re-populates the 13 canonical Kashmiri handicraft categories in Firestore with the correct names, asset image paths, and sort order. Requires confirmation before running.
+**Seed categories** — A utility button re-populates the 13 canonical categories in Firestore with correct names, asset image paths, and sort order. Requires confirmation before running.
+
+![Admin Panel](screenshots/AdminPannelScreen.jpg)
 
 ---
 
@@ -98,9 +113,9 @@ Admins access a dashboard with three live counters (total shops, orders, users) 
 
 ### AI Shopping Assistant
 
-The chat interface connects to a Gemini 2.5 Flash model hosted entirely in a Firebase Cloud Function — the API key never touches the device. The function implements context caching: on the first request it fetches the full live product catalog from Firestore, combines it with the system prompt, and caches it in Gemini for one hour. Subsequent messages within that window skip the catalog re-fetch and only pay for new tokens.
+The chat interface connects to Gemini 2.5 Flash hosted entirely in a Firebase Cloud Function — the API key never touches the device. The function implements context caching: on the first request it fetches the full live product catalog from Firestore, combines it with the system prompt, and caches the result in Gemini for one hour. Subsequent messages within that window skip the catalog re-fetch and pay only for new tokens.
 
-The assistant understands natural language queries, recommends specific products with shop name and price, and stays within the bounds of the live catalog — it will not invent products.
+The assistant recommends specific products with shop name and price, and stays strictly within the bounds of the live catalog — it will not invent products.
 
 **Example queries:**
 > "I want a traditional Kashmiri gift under ₹2000"  
@@ -109,7 +124,7 @@ The assistant understands natural language queries, recommends specific products
 
 ### AI Description Generator
 
-When a vendor adds a product, a sparkle button sits beside the description field. Tapping it sends the product image (as base64), name, and category to a Gemini Vision cloud function. The model returns a JSON object with eight structured fields — tagline, narrative, material, craft technique, colour, dimensions, occasion, and care instructions — which the app parses and renders as a rich product detail view. If no image has been picked, the generator falls back to text-only based on the product name and category.
+When a vendor adds a product, a sparkle button sits beside the description field. Tapping it sends the product image (as base64), name, and category to a Gemini Vision Cloud Function. The model returns a JSON object with eight structured fields — tagline, narrative, material, craft technique, colour, dimensions, occasion, and care instructions — which the app parses and renders as a rich product detail view.
 
 ---
 
@@ -218,63 +233,63 @@ A cart with items from three shops produces three order documents.
 ```
 sheen_bazaar/
 ├── lib/
-│   ├── main.dart                        App entry, Firebase init, theme, Provider
-│   ├── app_router.dart                  Auth-aware cold-start router (zero visual flash)
+│   ├── main.dart                          App entry, Firebase init, theme, Provider
+│   ├── app_router.dart                    Auth-aware cold-start router (zero visual flash)
 │   ├── models/
 │   │   ├── category_model.dart
 │   │   ├── shop_model.dart
-│   │   └── product_model.dart           Includes ProductDetails (AI-generated struct)
+│   │   └── product_model.dart             Includes ProductDetails (AI-generated struct)
 │   ├── providers/
-│   │   └── cart_provider.dart           Global cart state
+│   │   └── cart_provider.dart             Global cart state
 │   ├── services/
-│   │   ├── category_service.dart        Fetches categories ordered by sortOrder
-│   │   ├── shop_service.dart            collectionGroup queries for category browsing
-│   │   ├── gemini_service.dart          Proxy to Cloud Functions — chat + vision
-│   │   ├── image_upload_service.dart    Validate, resize, upload to Firebase Storage
-│   │   └── category_seeder.dart        Calls seedCategories Cloud Function
+│   │   ├── category_service.dart          Fetches categories ordered by sortOrder
+│   │   ├── shop_service.dart              collectionGroup queries for category browsing
+│   │   ├── gemini_service.dart            Proxy to Cloud Functions — chat + vision
+│   │   ├── image_upload_service.dart      Validate, resize, upload to Firebase Storage
+│   │   └── category_seeder.dart          Calls seedCategories Cloud Function
 │   ├── theme/
-│   │   └── app_theme.dart              AppColors, AppTextStyles, AppDecorations
+│   │   └── app_theme.dart                AppColors, AppTextStyles, AppDecorations
 │   ├── utils/
-│   │   └── transitions.dart            fadeSlideRoute — 320ms cubic page transition
+│   │   └── transitions.dart              fadeSlideRoute — 320ms cubic page transition
 │   ├── widgets/
-│   │   ├── hamburger_menu.dart          Full-screen animated menu overlay
-│   │   ├── image_picker_field.dart      Reusable image picker with preview
-│   │   ├── login_required_dialog.dart   Bottom sheet for guest-gated actions
+│   │   ├── hamburger_menu.dart            Full-screen animated menu overlay
+│   │   ├── image_picker_field.dart        Reusable image picker with preview
+│   │   ├── login_required_dialog.dart     Bottom sheet for guest-gated actions
 │   │   └── bottom_nav_bar.dart
 │   └── screens/
 │       ├── auth/
-│       │   └── login_page.dart          Login + Register with role selector
+│       │   └── login_page.dart            Login + Register with role selector
 │       ├── customer/
-│       │   ├── customer_home.dart       Hero, Lottie animation, category grid
-│       │   ├── search_screen.dart       Search input with suggestion chips
-│       │   ├── search_results_screen.dart  collectionGroup results, out-of-stock dimmed
-│       │   ├── shops_list.dart          Shops per category (editorial cards)
-│       │   ├── shop_detail.dart         Products grid + reviews section
-│       │   ├── product_detail.dart      AI/plain description, cart CTA, image zoom
-│       │   ├── cart_screen.dart         Item list, qty controls, per-shop checkout
-│       │   ├── cart_icon_button.dart    Badge icon for app bars
-│       │   ├── order_history.dart       Status timeline per order
-│       │   ├── ai_assistant.dart        Gemini chat with context caching
-│       │   └── write_review.dart        5-star review form
+│       │   ├── customer_home.dart         Hero, Lottie animation, category grid
+│       │   ├── search_screen.dart         Search input with suggestion chips
+│       │   ├── search_results_screen.dart collectionGroup results, out-of-stock dimmed
+│       │   ├── shops_list.dart            Shops per category (editorial cards)
+│       │   ├── shop_detail.dart           Products grid + reviews section
+│       │   ├── product_detail.dart        AI/plain description, cart CTA, image zoom
+│       │   ├── cart_screen.dart           Item list, qty controls, per-shop checkout
+│       │   ├── cart_icon_button.dart      Badge icon for app bars
+│       │   ├── order_history.dart         Status timeline per order
+│       │   ├── ai_assistant.dart          Gemini chat with context caching
+│       │   └── write_review.dart          5-star review form
 │       ├── shop_owner/
-│       │   ├── shop_dashboard.dart      Overview, stats, navigation
-│       │   ├── create_shop.dart         Create/edit shop with image uploads
-│       │   ├── manage_products.dart     Product list + Add/Edit form + AI generate
-│       │   ├── vendor_orders.dart       Order feed with status update
-│       │   └── vendor_analytics.dart    Revenue, best sellers, low-stock alerts
+│       │   ├── shop_dashboard.dart        Overview, stats, navigation
+│       │   ├── create_shop.dart           Create/edit shop with image uploads
+│       │   ├── manage_products.dart       Product list + Add/Edit form + AI generate
+│       │   ├── vendor_orders.dart         Order feed with status update
+│       │   └── vendor_analytics.dart      Revenue, best sellers, low-stock alerts
 │       └── admin/
-│           ├── admin_panel.dart         Live counters, navigation tiles
-│           ├── admin_shops.dart         Ban/verify shops, browse products
-│           ├── admin_users.dart         User list with role badges
-│           └── admin_orders.dart        Cross-shop order feed
+│           ├── admin_panel.dart           Live counters, navigation tiles
+│           ├── admin_shops.dart           Ban/verify shops, browse products
+│           ├── admin_users.dart           User list with role badges
+│           └── admin_orders.dart          Cross-shop order feed
 ├── functions/
-│   ├── index.js                         geminiChat, geminiDescribeProduct, seedCategories
+│   ├── index.js                           geminiChat, geminiDescribeProduct, seedCategories
 │   └── package.json
 ├── assets/
 │   ├── images/
 │   │   ├── splash_bg.jpg
 │   │   ├── wicker_basket.png
-│   │   └── category-covers/            13 JPEG files, one per category
+│   │   └── category-covers/              13 JPEG files, one per category
 │   └── lottie/
 │       └── Falling leaves.json
 ├── docs/
