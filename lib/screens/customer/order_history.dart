@@ -335,13 +335,11 @@ class _ReviewPromptState extends State<_ReviewPrompt> {
   Future<void> _checkReviewed() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) { setState(() => _loading = false); return; }
-    final snap = await FirebaseFirestore.instance
+    final doc = await FirebaseFirestore.instance
         .collection('reviews')
-        .where('orderId', isEqualTo: widget.orderId)
-        .where('userId', isEqualTo: uid)
-        .limit(1)
+        .doc('${widget.orderId}_$uid')
         .get();
-    setState(() { _reviewed = snap.docs.isNotEmpty; _loading = false; });
+    setState(() { _reviewed = doc.exists; _loading = false; });
   }
 
   @override

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../../theme/app_theme.dart';
 
 class WriteReview extends StatefulWidget {
@@ -47,53 +46,47 @@ class _WriteReviewState extends State<WriteReview> {
     }
 
     setState(() => _submitting = true);
-    final user = FirebaseAuth.instance.currentUser!;
 
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users').doc(user.uid).get();
-    final userName = userDoc.data()?['name'] ?? user.email ?? 'Customer';
-
-    final firestore = FirebaseFirestore.instance;
-
-    await firestore.collection('reviews').add({
-      'shopId': widget.shopId,
-      'orderId': widget.orderId,
-      'userId': user.uid,
-      'userName': userName,
-      'rating': _rating,
-      'comment': _commentCtrl.text.trim(),
-      'createdAt': Timestamp.now(),
-    });
-
-    final reviewsSnap = await firestore
-        .collection('reviews')
-        .where('shopId', isEqualTo: widget.shopId)
-        .get();
-
-    if (reviewsSnap.docs.isNotEmpty) {
-      final totalRating = reviewsSnap.docs
-          .fold<double>(0, (acc, doc) => acc + ((doc['rating'] ?? 0) as num).toDouble());
-      final avgRating = totalRating / reviewsSnap.docs.length;
-
-      await firestore.collection('shops').doc(widget.shopId).update({
-        'rating': double.parse(avgRating.toStringAsFixed(1)),
-        'totalReviews': reviewsSnap.docs.length,
+    try {
+      final callable = FirebaseFunctions.instanceFor(region: 'asia-south1')
+          .httpsCallable('submitReview');
+      await callable.call<Map>({
+        'orderId': widget.orderId,
+        'rating': _rating,
+        'comment': _commentCtrl.text.trim(),
       });
-    }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Thank you for your review!'),
-          backgroundColor: AppColors.surface,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: AppColors.cardBorder),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Thank you for your review!'),
+            backgroundColor: AppColors.surface,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: const BorderSide(color: AppColors.cardBorder),
+            ),
           ),
-        ),
-      );
-      Navigator.pop(context);
+        );
+        Navigator.pop(context);
+      }
+    } on FirebaseFunctionsException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'Could not submit review.'),
+            backgroundColor: AppColors.surface,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.surface),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 

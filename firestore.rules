@@ -2,74 +2,131 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
     function isSignedIn() {
       return request.auth != null;
     }
+
     function isAdmin() {
       return isSignedIn() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
+
     function isOwnerOf(shopId) {
       return isSignedIn() &&
         get(/databases/$(database)/documents/shops/$(shopId)).data.ownerId == request.auth.uid;
     }
 
-    // ── Categories — public read, admin write ─────────────────────────────────
+    function changedOnly(fields) {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly(fields);
+    }
+
+    function validUserCreate(userId) {
+      return request.auth.uid == userId &&
+        request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'role', 'createdAt']) &&
+        request.resource.data.role in ['customer', 'shop_owner'];
+    }
+
+    function validUserSelfUpdate() {
+      return changedOnly(['name', 'phone']) &&
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.email == resource.data.email;
+    }
+
+    function validShopCreate() {
+      return request.resource.data.keys().hasOnly([
+          'shopName', 'description', 'location', 'coverImage', 'logo',
+          'ownerId', 'isOpen', 'isVerified', 'rating', 'totalReviews', 'createdAt'
+        ]) &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.isOpen is bool &&
+        (!('isVerified' in request.resource.data) || request.resource.data.isVerified == false) &&
+        request.resource.data.rating == 0 &&
+        request.resource.data.totalReviews == 0;
+    }
+
+    function validOwnerShopUpdate() {
+      return changedOnly(['shopName', 'description', 'location', 'coverImage', 'logo', 'isOpen']) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.isVerified == resource.data.isVerified &&
+        request.resource.data.rating == resource.data.rating &&
+        request.resource.data.totalReviews == resource.data.totalReviews;
+    }
+
+    function validAdminShopUpdate() {
+      return changedOnly(['isOpen', 'isVerified']);
+    }
+
+    function validProductWrite() {
+      return request.resource.data.keys().hasOnly([
+          'name', 'description', 'image', 'price', 'stock', 'categoryId', 'createdAt', 'details'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.description is string &&
+        request.resource.data.image is string &&
+        request.resource.data.price is number &&
+        request.resource.data.price >= 0 &&
+        request.resource.data.stock is int &&
+        request.resource.data.stock >= 0 &&
+        request.resource.data.categoryId is string &&
+        (!('details' in request.resource.data) || request.resource.data.details is map);
+    }
+
+    function validOrderStatusUpdate() {
+      return changedOnly(['status']) &&
+        request.resource.data.status in ['placed', 'confirmed', 'dispatched', 'delivered'];
+    }
+
     match /categories/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // ── Users ─────────────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read:   if isSignedIn();
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() &&
-                      (request.auth.uid == userId || isAdmin());
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && validUserCreate(userId);
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId && validUserSelfUpdate()) ||
+        isAdmin()
+      );
       allow delete: if isAdmin();
     }
 
-    // ── Shops ─────────────────────────────────────────────────────────────────
     match /shops/{shopId} {
-      allow read:   if true;
-      allow create: if isSignedIn();
-      allow update: if isOwnerOf(shopId) || isAdmin();
-      allow delete: if isOwnerOf(shopId) || isAdmin();
+      allow read: if true;
+      allow create: if isSignedIn() && validShopCreate();
+      allow update: if isSignedIn() && (
+        (isOwnerOf(shopId) && validOwnerShopUpdate()) ||
+        (isAdmin() && validAdminShopUpdate())
+      );
+      allow delete: if isAdmin();
 
-      // Products within a shop
       match /products/{productId} {
-        allow read:   if true;
-        allow create: if isOwnerOf(shopId);
-        allow update: if isOwnerOf(shopId);
+        allow read: if true;
+        allow create, update: if isOwnerOf(shopId) && validProductWrite();
         allow delete: if isOwnerOf(shopId) || isAdmin();
-      }
-
-      // Reviews within a shop
-      match /reviews/{reviewId} {
-        allow read:   if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isSignedIn() &&
-                                request.auth.uid == resource.data.userId;
       }
     }
 
-    // ── CollectionGroup read for products (needed for cross-shop category queries)
     match /{path=**}/products/{productId} {
       allow read: if true;
     }
 
-    // ── Orders ────────────────────────────────────────────────────────────────
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create, update: if false;
+      allow delete: if isAdmin();
+    }
+
     match /orders/{orderId} {
-      allow read:   if isSignedIn() && (
-                      request.auth.uid == resource.data.userId ||
-                      isOwnerOf(resource.data.shopId) ||
-                      isAdmin()
-                    );
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && (
-                      isOwnerOf(resource.data.shopId) || isAdmin()
-                    );
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.userId ||
+        isOwnerOf(resource.data.shopId) ||
+        isAdmin()
+      );
+      allow create: if false;
+      allow update: if isSignedIn() &&
+        (isOwnerOf(resource.data.shopId) || isAdmin()) &&
+        validOrderStatusUpdate();
       allow delete: if isAdmin();
     }
   }

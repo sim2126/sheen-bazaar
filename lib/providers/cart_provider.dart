@@ -36,11 +36,15 @@ class CartProvider extends ChangeNotifier {
     ProductModel product,
     ShopModel shop,
   ) {
+    if (product.stock <= 0) return;
+
     final index = _items.indexWhere(
       (i) => i.product.id == product.id,
     );
     if (index >= 0) {
-      _items[index].qty++;
+      if (_items[index].qty < product.stock) {
+        _items[index].qty++;
+      }
     } else {
       _items.add(
         CartItem(product: product, shop: shop),
@@ -61,7 +65,10 @@ class CartProvider extends ChangeNotifier {
       (i) => i.product.id == productId,
     );
     if (index >= 0) {
-      _items[index].qty++;
+      final item = _items[index];
+      if (item.qty < item.product.stock) {
+        item.qty++;
+      }
       notifyListeners();
     }
   }

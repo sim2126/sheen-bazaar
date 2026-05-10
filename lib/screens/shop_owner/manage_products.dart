@@ -635,98 +635,148 @@ class _AiGenerateButtonState extends State<_AiGenerateButton> {
 
     setState(() => _loading = true);
 
-    final categoryName = widget.getCategoryName();
-
-    const systemPrompt =
-        'You are a product listing specialist for a premium Kashmiri handicrafts marketplace.\n\n'
-        'analyze the product image\n'
-        'analyze the product name\n'
-        'analyze the product category\n\n'
-        'Output ONLY a valid JSON object — no markdown, no explanation, no code fences.\n\n'
-        'JSON schema (all fields are strings, omit a field only if truly unknown):\n'
-        '{\n'
-        '  "tagline": "One punchy headline (max 12 words) that captures the product essence",\n'
-        '  "narrative": "2–3 sentences: technique/origin, what you see (color, pattern, texture, motifs), and what makes it special",\n'
-        '  "material": "Primary material and grade, e.g. Pure Pashmina wool (Grade A)",\n'
-        '  "craft": "Craft technique, e.g. Sozni hand-embroidery or Kani pit-loom weave",\n'
-        '  "color": "Exact color(s) and any accent colors visible",\n'
-        '  "dimensions": "Approximate size if inferable, else omit",\n'
-        '  "occasion": "Best occasions or use cases, e.g. Weddings, winter gifting, daily wear",\n'
-        '  "care": "Care instruction, e.g. Dry clean only. Store in soft muslin."\n'
-        '}\n\n'
-        'Rules for narrative:\n'
-        '- Be specific to THIS product — not generic Kashmiri craft facts\n'
-        '- Lead with the unique technique or material\n'
-        '- Describe what is actually visible: color, weave, embroidery, motifs, finish\n'
-        '- Plain text — no bullet points, markdown, or asterisks inside any field\n'
-        'Use only what you actually see — not assumptions.';
-
-    final imageFile = widget.getImageFile();
-    String rawResponse;
-
-    if (imageFile != null) {
-      final imageBytes = await imageFile.readAsBytes();
-      final userText =
-          'Product name: "$name"\n'
-          'Category: $categoryName\n\n'
-          'Analyze the product image, the product name, and the product category. '
-          'Use only what you actually see — not assumptions.\n\n'
-          'Return the JSON object as specified.';
-
-      rawResponse = await GeminiService.sendMessageWithImage(
-        systemPrompt: systemPrompt,
-        userText: userText,
-        imageBytes: imageBytes,
-      );
-    } else {
-      rawResponse = await GeminiService.sendMessage(
-        systemPrompt: systemPrompt,
-        messages: [
-          {
-            'role': 'user',
-            'content':
-                'Product name: "$name". Category: $categoryName. '
-                'No image is available. Use your knowledge of this craft type to fill '
-                'in as much detail as possible. Return the JSON object as specified.',
-          },
-        ],
-      );
-    }
-
-    // Parse JSON — gracefully fall back to raw text if parsing fails
-    ProductDetails? details;
-    String plainDescription = rawResponse;
     try {
-      // Strip any accidental markdown fences Claude may add
+      final categoryName = widget.getCategoryName();
+      final imageFile = widget.getImageFile();
+      final imageBytes = imageFile == null ? null : await imageFile.readAsBytes();
+      final rawResponse = await GeminiService.describeProduct(
+        productName: name,
+        categoryName: categoryName,
+        imageBytes: imageBytes,
+        mediaType: imageFile == null ? 'image/jpeg' : _mediaTypeFor(imageFile),
+      );
+
       final cleaned = rawResponse
           .replaceAll(RegExp(r'```json\s*'), '')
           .replaceAll(RegExp(r'```\s*'), '')
           .trim();
       final parsed = jsonDecode(cleaned) as Map<String, dynamic>;
-      details = ProductDetails.fromMap(parsed);
-      // Build the plain-text fallback from structured fields for the text field preview
-      plainDescription = [
-        if (details.tagline != null) details.tagline!,
-        if (details.narrative != null) details.narrative!,
-        if (details.material != null) 'Material: ${details.material}',
-        if (details.craft != null) 'Craft: ${details.craft}',
-        if (details.color != null) 'Color: ${details.color}',
-        if (details.occasion != null) 'Occasion: ${details.occasion}',
-        if (details.care != null) 'Care: ${details.care}',
-      ].join('\n');
-    } catch (_) {
-      // JSON parse failed — rawResponse is already set as plainDescription
-    }
+      final details = ProductDetails.fromMap(parsed);
+      final plainDescription = _plainDescription(details);
 
-    widget.onGenerated(plainDescription, details);
-    setState(() => _loading = false);
+      if (plainDescription.isEmpty) {
+        throw Exception('AI returned an empty product description.');
+      }
+
+      if (!mounted) return;
+      final apply = await _showGeneratedPreview(details: details);
+      if (apply && mounted) {
+        widget.onGenerated(plainDescription, details);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: const Color(0xFFB5603A),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _plainDescription(ProductDetails details) {
+    return [
+      if (details.tagline != null) details.tagline!,
+      if (details.narrative != null) details.narrative!,
+      if (details.material != null) 'Material: ${details.material}',
+      if (details.craft != null) 'Craft: ${details.craft}',
+      if (details.color != null) 'Color: ${details.color}',
+      if (details.dimensions != null) 'Dimensions: ${details.dimensions}',
+      if (details.occasion != null) 'Occasion: ${details.occasion}',
+      if (details.care != null) 'Care: ${details.care}',
+    ].join('\n').trim();
+  }
+
+  String _mediaTypeFor(XFile imageFile) {
+    final lower = imageFile.name.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  Future<bool> _showGeneratedPreview({
+    required ProductDetails details,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Review AI description',
+          style: TextStyle(color: Color(0xFF3D2B1F)),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Check these details before applying them to the product listing.',
+                style: TextStyle(color: Color(0xFF6B5A4A), fontSize: 14),
+              ),
+              const SizedBox(height: 14),
+              _previewRow('Tagline', details.tagline),
+              _previewRow('Narrative', details.narrative),
+              _previewRow('Material', details.material),
+              _previewRow('Craft', details.craft),
+              _previewRow('Color', details.color),
+              _previewRow('Dimensions', details.dimensions),
+              _previewRow('Occasion', details.occasion),
+              _previewRow('Care', details.care),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Widget _previewRow(String label, String? value) {
+    if (value == null || value.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFFB5603A),
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF3D2B1F),
+              fontSize: 14,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final hasImage = widget.getImageFile() != null;
     return Tooltip(
-      message: hasImage ? 'Generate from image' : 'Generate with AI',
+      message: hasImage ? 'Generate from image' : 'Generate with product name only',
       child: GestureDetector(
         onTap: _loading ? null : _generate,
         child: Container(

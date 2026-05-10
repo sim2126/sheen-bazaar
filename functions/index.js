@@ -2,7 +2,7 @@
  * Firebase Cloud Functions: Gemini AI Proxy
  *
  * Routes all AI calls through the backend so the API key never touches the device.
- * Uses Gemini 1.5 Flash for cost efficiency (~40x cheaper input than Claude Sonnet).
+ * Uses Gemini 2.5 Flash for multimodal catalog and product description generation.
  * Implements Context Caching for the system prompt + full product catalog.
  * Caching activates automatically once cached content exceeds Gemini's 32,768-token
  * minimum — below that threshold it falls back to regular generation transparently.
@@ -18,7 +18,7 @@
 
 const functions = require('firebase-functions');
 const { defineSecret } = require('firebase-functions/params');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const { GoogleAICacheManager } = require('@google/generative-ai/server');
 const admin = require('firebase-admin');
 
@@ -29,6 +29,56 @@ admin.initializeApp();
 const GEMINI_KEY = defineSecret('GEMINI_KEY');
 
 const MODEL_ID = 'gemini-2.5-flash';
+
+const PRODUCT_DESCRIPTION_SYSTEM_INSTRUCTION =
+  `You create accurate, buyer-facing product listing copy for Sheen Bazaar, a Kashmiri handicrafts marketplace.\n\n` +
+  `Return concise, factual listing details. Treat the vendor-provided product name and category as hints, not proof of material, grade, age, origin, or technique.\n\n` +
+  `Rules:\n` +
+  `- Use the image as the primary source when an image is provided.\n` +
+  `- If no image is provided, only use facts stated in the product name and category; keep uncertain fields omitted.\n` +
+  `- Do not invent exact material grade, dimensions, artisan method, authenticity, age, brand, provenance, or medical/therapeutic claims.\n` +
+  `- If a detail is not visible or explicitly stated, omit that field instead of guessing.\n` +
+  `- Keep every field plain text: no markdown, bullets, asterisks, emojis, or code fences.\n` +
+  `- Write for customers, but avoid exaggerated luxury claims.`;
+
+const PRODUCT_DESCRIPTION_SCHEMA = {
+  type: SchemaType.OBJECT,
+  properties: {
+    tagline: {
+      type: SchemaType.STRING,
+      description: 'A concise product headline, maximum 12 words.',
+    },
+    narrative: {
+      type: SchemaType.STRING,
+      description: 'Two to three factual sentences about visible design, texture, finish, and likely use. Avoid unsupported claims.',
+    },
+    material: {
+      type: SchemaType.STRING,
+      description: 'Only material that is visible or explicitly stated in the product name/category.',
+    },
+    craft: {
+      type: SchemaType.STRING,
+      description: 'Only the craft technique if visible or explicitly stated.',
+    },
+    color: {
+      type: SchemaType.STRING,
+      description: 'Visible dominant and accent colors. Omit when no image is provided.',
+    },
+    dimensions: {
+      type: SchemaType.STRING,
+      description: 'Only dimensions explicitly visible from labels/text or provided by the vendor. Do not estimate.',
+    },
+    occasion: {
+      type: SchemaType.STRING,
+      description: 'Appropriate use cases based on the product category and visible design.',
+    },
+    care: {
+      type: SchemaType.STRING,
+      description: 'General, safe care guidance for the category. Avoid unsupported material-specific claims.',
+    },
+  },
+  required: ['tagline', 'narrative'],
+};
 
 // ── Static system instruction ────────────────────────────────────────────────
 const ASSISTANT_SYSTEM_INSTRUCTION =
@@ -250,6 +300,205 @@ exports.seedCategories = functions
   });
 
 // ── geminiDescribeProduct ─────────────────────────────────────────────────────
+function assertCallableAuth(context) {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be signed in.');
+  }
+  return context.auth.uid;
+}
+
+function asPositiveInt(value, fieldName, max = 99) {
+  if (!Number.isInteger(value) || value <= 0 || value > max) {
+    throw new functions.https.HttpsError('invalid-argument', `${fieldName} must be between 1 and ${max}.`);
+  }
+  return value;
+}
+
+function asCleanString(value, fieldName, maxLength) {
+  if (typeof value !== 'string') {
+    throw new functions.https.HttpsError('invalid-argument', `${fieldName} must be a string.`);
+  }
+  const cleaned = value.trim();
+  if (!cleaned || cleaned.length > maxLength) {
+    throw new functions.https.HttpsError('invalid-argument', `${fieldName} is invalid.`);
+  }
+  return cleaned;
+}
+
+// ── placeOrder ────────────────────────────────────────────────────────────────
+exports.placeOrder = functions
+  .region('asia-south1')
+  .runWith({ timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    const uid = assertCallableAuth(context);
+    const items = data && data.items;
+
+    if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
+      throw new functions.https.HttpsError('invalid-argument', 'Cart must contain 1 to 100 items.');
+    }
+
+    const db = admin.firestore();
+    const groupedItems = new Map();
+
+    for (const item of items) {
+      const shopId = asCleanString(item && item.shopId, 'shopId', 128);
+      const productId = asCleanString(item && item.productId, 'productId', 128);
+      const qty = asPositiveInt(item && item.qty, 'qty');
+      const key = `${shopId}/${productId}`;
+      const existing = groupedItems.get(key);
+      if (existing) {
+        existing.qty = asPositiveInt(existing.qty + qty, 'qty', 99);
+      } else {
+        groupedItems.set(key, { shopId, productId, qty });
+      }
+    }
+
+    return await db.runTransaction(async (tx) => {
+      const shopDataById = new Map();
+      const orderItemsByShop = new Map();
+      const productUpdates = [];
+
+      for (const item of groupedItems.values()) {
+        let shop = shopDataById.get(item.shopId);
+        if (!shop) {
+          const shopRef = db.collection('shops').doc(item.shopId);
+          const shopSnap = await tx.get(shopRef);
+          if (!shopSnap.exists) {
+            throw new functions.https.HttpsError('not-found', 'Shop not found.');
+          }
+          shop = { id: item.shopId, ref: shopRef, data: shopSnap.data() };
+          if (shop.data.isOpen !== true) {
+            throw new functions.https.HttpsError('failed-precondition', `${shop.data.shopName || 'This shop'} is currently closed.`);
+          }
+          shopDataById.set(item.shopId, shop);
+        }
+
+        const productRef = shop.ref.collection('products').doc(item.productId);
+        const productSnap = await tx.get(productRef);
+        if (!productSnap.exists) {
+          throw new functions.https.HttpsError('not-found', 'Product not found.');
+        }
+
+        const product = productSnap.data();
+        const stock = Number(product.stock || 0);
+        const price = Number(product.price || 0);
+
+        if (!Number.isFinite(price) || price < 0) {
+          throw new functions.https.HttpsError('failed-precondition', `${product.name || 'Product'} has an invalid price.`);
+        }
+        if (!Number.isInteger(stock) || stock < item.qty) {
+          throw new functions.https.HttpsError('failed-precondition', `${product.name || 'Product'} does not have enough stock.`);
+        }
+
+        productUpdates.push({ ref: productRef, stock: stock - item.qty });
+
+        const orderItems = orderItemsByShop.get(item.shopId) || [];
+        orderItems.push({
+          productId: item.productId,
+          name: product.name || '',
+          price,
+          qty: item.qty,
+          image: product.image || '',
+        });
+        orderItemsByShop.set(item.shopId, orderItems);
+      }
+
+      for (const update of productUpdates) {
+        tx.update(update.ref, { stock: update.stock });
+      }
+
+      const createdOrders = [];
+      for (const [shopId, orderItems] of orderItemsByShop.entries()) {
+        const shop = shopDataById.get(shopId);
+        const total = orderItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+        const orderRef = db.collection('orders').doc();
+        tx.set(orderRef, {
+          userId: uid,
+          shopId,
+          shopName: shop.data.shopName || '',
+          status: 'placed',
+          total,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          items: orderItems,
+        });
+        createdOrders.push(orderRef.id);
+      }
+
+      return { orderIds: createdOrders, count: createdOrders.length };
+    });
+  });
+
+// ── submitReview ──────────────────────────────────────────────────────────────
+exports.submitReview = functions
+  .region('asia-south1')
+  .runWith({ timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    const uid = assertCallableAuth(context);
+    const orderId = asCleanString(data && data.orderId, 'orderId', 128);
+    const rating = asPositiveInt(data && data.rating, 'rating', 5);
+    const comment = typeof (data && data.comment) === 'string'
+      ? data.comment.trim().slice(0, 1000)
+      : '';
+
+    const db = admin.firestore();
+    const reviewId = `${orderId}_${uid}`;
+
+    return await db.runTransaction(async (tx) => {
+      const orderRef = db.collection('orders').doc(orderId);
+      const orderSnap = await tx.get(orderRef);
+      if (!orderSnap.exists) {
+        throw new functions.https.HttpsError('not-found', 'Order not found.');
+      }
+
+      const order = orderSnap.data();
+      if (order.userId !== uid) {
+        throw new functions.https.HttpsError('permission-denied', 'You can only review your own orders.');
+      }
+      if (order.status !== 'delivered') {
+        throw new functions.https.HttpsError('failed-precondition', 'Only delivered orders can be reviewed.');
+      }
+
+      const reviewRef = db.collection('reviews').doc(reviewId);
+      const reviewSnap = await tx.get(reviewRef);
+      if (reviewSnap.exists) {
+        throw new functions.https.HttpsError('already-exists', 'This order has already been reviewed.');
+      }
+
+      const userSnap = await tx.get(db.collection('users').doc(uid));
+      const user = userSnap.exists ? userSnap.data() : {};
+      const userName = user.name || user.email || 'Customer';
+
+      const shopRef = db.collection('shops').doc(order.shopId);
+      const shopSnap = await tx.get(shopRef);
+      if (!shopSnap.exists) {
+        throw new functions.https.HttpsError('not-found', 'Shop not found.');
+      }
+
+      const shop = shopSnap.data();
+      const currentTotalReviews = Number(shop.totalReviews || 0);
+      const currentRating = Number(shop.rating || 0);
+      const newTotalReviews = currentTotalReviews + 1;
+      const newRating = Math.round(((currentRating * currentTotalReviews) + rating) / newTotalReviews * 10) / 10;
+
+      tx.set(reviewRef, {
+        shopId: order.shopId,
+        shopName: order.shopName || '',
+        orderId,
+        userId: uid,
+        userName,
+        rating,
+        comment,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      tx.update(shopRef, {
+        rating: newRating,
+        totalReviews: newTotalReviews,
+      });
+
+      return { reviewId, rating: newRating, totalReviews: newTotalReviews };
+    });
+  });
+
 exports.geminiDescribeProduct = functions
   .region('asia-south1')
   .runWith({ timeoutSeconds: 60, memory: '512MB', secrets: [GEMINI_KEY] })
@@ -258,29 +507,55 @@ exports.geminiDescribeProduct = functions
       throw new functions.https.HttpsError('unauthenticated', 'Must be signed in.');
     }
 
-    const { systemPrompt, userText, imageBase64, mediaType = 'image/jpeg' } = data;
-    if (!systemPrompt || !userText) {
-      throw new functions.https.HttpsError('invalid-argument', 'systemPrompt and userText are required.');
+    const {
+      productName,
+      categoryName,
+      imageBase64,
+      mediaType = 'image/jpeg',
+    } = data;
+
+    if (typeof productName !== 'string' || !productName.trim()) {
+      throw new functions.https.HttpsError('invalid-argument', 'productName is required.');
+    }
+    if (typeof categoryName !== 'string' || !categoryName.trim()) {
+      throw new functions.https.HttpsError('invalid-argument', 'categoryName is required.');
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(mediaType)) {
+      throw new functions.https.HttpsError('invalid-argument', 'Unsupported image type.');
+    }
+    if (imageBase64 && (typeof imageBase64 !== 'string' || imageBase64.length > 7_000_000)) {
+      throw new functions.https.HttpsError('invalid-argument', 'Image payload is too large.');
     }
 
     const apiKey = GEMINI_KEY.value();
     if (!apiKey) {
       throw new functions.https.HttpsError('internal', 'Gemini API key not configured.');
     }
-    console.log('geminiDescribeProduct: key present, length=', apiKey.length, 'model=', MODEL_ID);
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: MODEL_ID,
-        systemInstruction: systemPrompt,
+        systemInstruction: PRODUCT_DESCRIPTION_SYSTEM_INSTRUCTION,
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json',
+          responseSchema: PRODUCT_DESCRIPTION_SCHEMA,
+        },
       });
 
       const parts = [];
       if (imageBase64) {
         parts.push({ inlineData: { mimeType: mediaType, data: imageBase64 } });
       }
-      parts.push({ text: userText });
+      parts.push({
+        text:
+          `Product name: ${productName.trim()}\n` +
+          `Category: ${categoryName.trim()}\n` +
+          `Image provided: ${imageBase64 ? 'yes' : 'no'}\n\n` +
+          `Create the JSON product description using the schema. ` +
+          `If there is no image, do not describe colors, dimensions, grade, or visible motifs unless they are explicitly present in the product name.`,
+      });
 
       const result = await model.generateContent(parts);
       return { text: result.response.text() };

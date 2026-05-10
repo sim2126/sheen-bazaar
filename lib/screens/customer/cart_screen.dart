@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../../providers/cart_provider.dart';
 import '../../widgets/login_required_dialog.dart';
 import '../../theme/app_theme.dart';
@@ -19,54 +19,34 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> _placeOrder(CartProvider cart) async {
     if (cart.items.isEmpty) return;
 
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
+    if (FirebaseAuth.instance.currentUser == null) {
       if (mounted) showLoginRequiredDialog(context);
       return;
     }
 
     setState(() => _placing = true);
 
-    final Map<String, List<CartItem>> byShop = {};
-    for (final item in cart.items) {
-      byShop.putIfAbsent(item.shop.id, () => []).add(item);
-    }
-
     try {
-      final batch = FirebaseFirestore.instance.batch();
-
-      for (final entry in byShop.entries) {
-        final shopId = entry.key;
-        final shopItems = entry.value;
-        final total = shopItems.fold<double>(
-          0, (acc, i) => acc + (i.product.price * i.qty),
-        );
-
-        final orderRef = FirebaseFirestore.instance.collection('orders').doc();
-        batch.set(orderRef, {
-          'userId': uid,
-          'shopId': shopId,
-          'shopName': shopItems.first.shop.shopName,
-          'status': 'placed',
-          'total': total,
-          'createdAt': Timestamp.now(),
-          'items': shopItems.map((i) => {
-            'productId': i.product.id,
-            'name': i.product.name,
-            'price': i.product.price,
-            'qty': i.qty,
-            'image': i.product.image,
-          }).toList(),
-        });
-      }
-
-      await batch.commit();
+      final callable = FirebaseFunctions.instanceFor(region: 'asia-south1')
+          .httpsCallable('placeOrder');
+      final result = await callable.call<Map>({
+        'items': cart.items.map((i) => {
+          'shopId': i.shop.id,
+          'productId': i.product.id,
+          'qty': i.qty,
+        }).toList(),
+      });
+      final orderCount = result.data['count'] ?? 1;
       cart.clear();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Order placed! Artisans will be notified.'),
+            content: Text(
+              orderCount == 1
+                  ? 'Order placed! Artisan will be notified.'
+                  : '$orderCount orders placed! Artisans will be notified.',
+            ),
             backgroundColor: AppColors.surface,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -77,6 +57,15 @@ class _CartScreenState extends State<CartScreen> {
           ),
         );
         Navigator.pop(context);
+      }
+    } on FirebaseFunctionsException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'Could not place order.'),
+            backgroundColor: AppColors.surface,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_functions/cloud_functions.dart';
 
-/// Calls Gemini 1.5 Flash via Firebase Cloud Functions.
+/// Calls Gemini 2.5 Flash via Firebase Cloud Functions.
 /// The API key never leaves the backend — no key exposure in the APK.
 class GeminiService {
   static FirebaseFunctions get _functions =>
@@ -28,12 +28,11 @@ class GeminiService {
     }
   }
 
-  /// Sends a product image + prompt to Gemini Vision for structured description generation.
-  /// [imageBytes] may be null — falls back to text-only generation in that case.
-  static Future<String> sendMessageWithImage({
-    required String systemPrompt,
-    required String userText,
-    required Uint8List imageBytes,
+  /// Requests a structured product description. The backend owns the prompt.
+  static Future<String> describeProduct({
+    required String productName,
+    required String categoryName,
+    Uint8List? imageBytes,
     String mediaType = 'image/jpeg',
   }) async {
     try {
@@ -42,16 +41,16 @@ class GeminiService {
         options: HttpsCallableOptions(timeout: const Duration(seconds: 60)),
       );
       final result = await callable.call<Map>({
-        'systemPrompt': systemPrompt,
-        'userText': userText,
-        'imageBase64': base64Encode(imageBytes),
+        'productName': productName,
+        'categoryName': categoryName,
+        if (imageBytes != null) 'imageBase64': base64Encode(imageBytes),
         'mediaType': mediaType,
       });
       return result.data['text'] as String;
     } on FirebaseFunctionsException catch (e) {
-      return 'Error: ${e.message}';
+      throw Exception(e.message ?? 'AI generation failed.');
     } catch (e) {
-      return 'Connection error: $e';
+      throw Exception('Connection error: $e');
     }
   }
 }
